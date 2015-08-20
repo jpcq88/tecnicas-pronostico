@@ -1,3 +1,7 @@
 *.zip
 *.Rhistory
 *.pdf
+*.out
+*.aux
+*.log
+*.pyg
