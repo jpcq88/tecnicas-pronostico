@@ -9,7 +9,7 @@ library(tidyr) # organizar los datos
 library(xts) # manipulación de fechas
 
 # Lectura de datos
-datos_orig <- read.table(file = 'IndProductividad.txt', header = FALSE)
+datos_orig <- read.table(file = '../datos/IndProductividad.txt', header = FALSE)
 head(datos_orig)
 
 # Organizamos los datos y le damos el formato adecuado
@@ -23,7 +23,7 @@ head(datos)
 
 # Análisis exploratorio inicial
 summary(datos)
-plot(datos)
+plot(datos, main = 'Índice de Productividad Mensual en Canadá')
 
 # Punto 1
 decompose(datos)
