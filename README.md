@@ -1,2 +1,2 @@
-# Código R talleres técnicas de pronóstico
-Código R utilizado en los talleres de la asignatura técnicas de pronóstico dictada en la Universidad Nacional de Colombia, Sede Medellín
+# Recursos asignatura técnicas de pronóstico
+Recursos utilizados en el curso técnicas de pronóstico dictado en la Universidad Nacional de Colombia, sede Medellín.
