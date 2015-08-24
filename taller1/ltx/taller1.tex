@@ -1,10 +1,8 @@
 \documentclass{tufte-handout}
 
 \usepackage[utf8]{inputenc}
-\usepackage[spanish]{babel}
+\usepackage[spanish, es-tabla]{babel}
 \spanishdecimal{.}
-\renewcommand{\figurename}{Figura}
-\renewcommand{\tablename}{Tabla}
 
 \usepackage{amsmath}
 \usepackage{booktabs}
@@ -15,25 +13,305 @@
 
 \title{Taller 1: Análisis Índice de Productividad - Canadá}
 \author{Juan Pablo Calle Quintero}
-\date{24 de agosto de 2015}
+\date{25 de agosto de 2015}
 
 \begin{document}
 \maketitle
 
 \section*{Punto 1}
 
-\begin{figure*}
+En la Figura~\ref{fig:p1_ind_prod} se muestra la serie mensual del índice de productividad de Canadá entre enero de 1950 y diciembre de 1973. A primera vista se puede observar una clara tendencia creciente del índice de productividad, que además parece ser global \marginnote{También parece que la  tendencia no es lineal, quizá un modelo cuadrático o exponencial ajuste mejor.}, esto lo vemos confirmado en la componente de la tendencia ($T_t$) que se muentra en la Figura~\ref{fig:p1_descomp}, donde vemos que se podría ajustar una curva suave donde los parámetros no dependan del tiempo.
+
+Viendo el gráfico de la serie no es muy claro si su varianza es constante o no. No es fácil de percibir cuando la variabilidad es pequeña. Como no se aprecian grandes diferencias en la varianza a través del tiempo se podría pensar en un modelo aditivo en principio.
+
+\begin{figure*}[!h]
     \includegraphics{p1_ind_prod.pdf}
-    \caption{Índice de productividad Canadá}
+    \caption{Serie de tiempo del índice de productividad de Canadá desde enero de 1950 hasta diciembre de 1973. Son 288 observaciones en 24 años.}
     \label{fig:p1_ind_prod}
 \end{figure*}
+
+Los primeros dos años de la serie (1950 y 1951) parecen tener un comportamiento diferente al resto, con un crecimiento considerablemente mayor comparado con los años siguientes, por lo que se podría pensar en un posible cambio estuctural de la serie a partir de 1952. Quizá una recesión económica o el fin de la participación de Candá en la guerra de Corea tengan que ver con este cambio. \footnote{Historica Canada. 2015. [En línea]. Tomado de http://www.thecanadianencyclopedia.ca/en/article/korean-war/} También es posible que se deba a un cambio en la medición del ídice.
+
+No parece haber indicios claros de ciclos, la componente del error ($E_t$) de la Figura~\ref{fig:p1_descomp} no tiene patrones observables mayores a un año que nos haga pensar en la presencia de ciclos.
+
+\begin{figure*}[!ht]
+    \includegraphics{p1_descomp.pdf}
+    \caption{Descomposición de la serie de tiempo en sus componentes; tendencia ($T_t$), estacional ($S_t$) y error ($E_t$)}
+    \label{fig:p1_descomp}
+\end{figure*}
+
+Aunque a simple vista no se aprecia un patrón estacional en el índice de productividad, la descomposición de la serie sí muestra claramente que existe un comportamiento repetitivo cada año (ver Figura~\ref{fig:p1_descomp}). Debido a que la la variabilidad de la series es pequeña, la estacionalidad no fácil de apreciar a simple vista en la Figura~\ref{fig:p1_ind_prod}. Incluso en el box plot que compara el comportamiento de los meses (ver Figura~\ref{fig:p1_boxplot_mes}) es muy difícil ver la estacionalidad. En este taller vamos a omitir la componente estacional por que no de interés por ahora.
+
+\begin{figure}[!ht]
+    \includegraphics{p1_boxplot_mes.pdf}
+    \caption{Box-plot de la serie por mes. La línea punteada roja corresponde a los promedios.}
+    \label{fig:p1_boxplot_mes}
+\end{figure}
+
 
 \pagebreak
 
 
 \section*{Punto 2}
 
+De acuerdo con lo visto gráficamente, se proponen tres modelos aditivos, el priemro de tendencia cuadrática, el segundo de tendencia cúbica y un último modelo no lineal de tendencia exponencial cúbica.
+
+\subsection*{Modelo aditivo de tendencia cuadrática}
+
+El modelo con tendencia cuadrática está dado por:
+
+\begin{equation} \label{eq:mod1_comp}
+	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + E_t
+\end{equation}
+
+En la Tabla~\ref{tab:mod1_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_comp}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrrl}
+            & Estimado & Error Estd. & Valor t & Pr($>$$|$t$|$) & \\ 
+  \hline
+  $\beta_0$ & 87.7218 & 0.5160 & 170.00 & $< 2E^{-16}$ & *** \\ 
+  $\beta_1$ & -0.0278 & 0.0082 & -3.368 & 0.0009 & *** \\ 
+  $\beta_2$ & 0.0008 & $2.763E^{-5}$ & 29.285 & $< 2E^{-16}$ & *** \\ 
+   \hline
+\end{tabular}
+\caption{Ajuste modelo tendencia cuadrática} 
+\label{tab:mod1_comp}
+\end{table}
+
+La ecuación ajustada es:
+
+\begin{equation}
+	\text{Índice Producción} = 87.7218 -0.0278 t + 0.0008 t^2
+\end{equation}
+
+\begin{figure*}[!ht]
+    \includegraphics{p2_diag_mod1_comp.pdf}
+    \caption{Gráficos de diagnóstico modelo tendencia cuadrática}
+    \label{fig:p2_diag_mod1_comp.pdf}
+\end{figure*}
+
+\subsection*{Modelo aditivo de tendencia cúbica}
+
+El modelo con tendencia cúbica está dado por:
+
+\begin{equation} \label{eq:mod2_comp}
+	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t
+\end{equation}
+
+En la Tabla~\ref{tab:mod2_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_comp}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrrl}
+          & Estimado & Error Estd. & Valor t & Pr($>$$|$t$|$) & \\ 
+  \hline
+$\beta_0$ & 81.3298 & 0.3964 & 205.18 & $<2E^{-16}$ & *** \\ 
+  $\beta_1$ & 0.2354 & 0.0119 & 19.85 & $<2E^{-16}$ & *** \\ 
+  $\beta_2$ & -0.0015 & 0.0001 & -15.36 & $<2E^{-16}$ & *** \\ 
+  $\beta_3$ & $5.242E^{-6}$ & $2.167E^{-7}$ & 24.19 & $<2E^{-16}$ & *** \\ 
+   \hline
+\end{tabular}
+\caption{Ajuste modelo tendencia cúbica} 
+\label{tab:mod2_comp}
+\end{table}
+
+La ecuación ajustada es:
+
+\begin{equation}
+	\text{Índice Producción} = 81.3298 + 0.2354 t - 0.0015 t^2 + 5.242E^{-6} t^3
+\end{equation}
+
+\begin{figure*}[!ht]
+    \includegraphics{p2_diag_mod2_comp.pdf}
+    \caption{Gráficos de diagnóstico modelo tendencia cúbica}
+    \label{fig:p2_diag_mod2_comp.pdf}
+\end{figure*}
+
+\subsection*{Modelo aditivo exponencial cúbico}
+
+El modelo con tendencia exponencial cúbica está dado por:
+
+\begin{equation} \label{eq:mod3_comp}
+	\text{Índice Producción} = e^{\beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t}
+\end{equation}
+
+En la Tabla~\ref{tab:mod3_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_comp}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrrl}
+          & Estimado & Error Estd. & Valor t & Pr($>$$|$t$|$) & \\ 
+  \hline
+$\beta_0$ & 4.411 & $4.655E^{-3}$ & 947.60 & $<2E^{-16}$ & *** \\ 
+  $\beta_1$ & 0.0021 & $1.280E^{-4}$ & 16.54 & $<2E^{-16}$ & *** \\ 
+  $\beta_2$ & $-1.003E^{-5}$ & $9.673E^{-7}$ & -10.37 & $<2E^{-16}$ & *** \\ 
+  $\beta_3$ & $3.553E^{-8}$ & $2.099E^{-9}$ & 16.93 & $<2E^{-16}$ & *** \\ 
+   \hline
+\end{tabular}
+\caption{Ajuste modelo tendencia cúbica exponencial} 
+\label{tab:mod3_comp}
+\end{table}
+
+La ecuación ajustada es:
+
+\begin{equation}
+	\text{Índice Producción} = e^{4.411 + 0.0021 t - 1.003E^{-5} t^2 + 3.553E^{-8} t^3}
+\end{equation}
+
+\begin{figure*}[!ht]
+    \includegraphics{p2_diag_mod3_comp.pdf}
+    \caption{Gráficos de diagnóstico modelo tendencia cúbica exponencial}
+    \label{fig:p2_diag_mod3_comp.pdf}
+\end{figure*}
+
+\subsection*{Comparación de los tres modelos}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrr}
+  Modelo     & MSE & AIC & BIC \\ 
+  \hline
+Tendencia cuadrática (\ref{eq:mod1_comp}) & 0.0102 & 1435.319 & 1449.971 \\ 
+Tendencia cúbica (\ref{eq:mod2_comp}) & 0.0058 & 1115.146 & 1133.461 \\ 
+Tendencia cúbica exponencial (\ref{eq:mod3_comp}) & 0.0060 & 1134.977 & 1153.292 \\ 
+   \hline
+\end{tabular}
+\caption{Comparación de los modelos. Entre menor el criterio, mejor el modelo.} 
+\label{tab:comparacion_modelos}
+\end{table}
+
+
 \section*{Punto 3}
+
+Ahora sin tener en cuenta los tres primeros años de la serie se ajustan los modelos nuevamente.
+
+\subsection*{Modelo aditivo de tendencia cuadrática}
+
+El modelo con tendencia cuadrática está dado por:
+
+\begin{equation} \label{eq:mod1_sin3}
+	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + E_t
+\end{equation}
+
+En la Tabla~\ref{tab:mod1_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_sin3}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrrl}
+            & Estimado & Error Estd. & Valor t & Pr($>$$|$t$|$) & \\ 
+  \hline
+  $\beta_0$ & 100.3677 & 0.3334 & 301.05 & $< 2E^{-16}$ & *** \\ 
+  $\beta_1$ & 0.1025 & 0.0106 & 9.65 & $< 2E^{-16}$ & *** \\ 
+  $\beta_2$ & 0.0018 & 0.0001 & 24.97 & $< 2E^{-16}$ & *** \\ 
+   \hline
+\end{tabular}
+\caption{Ajuste modelo tendencia cuadrática sin tres primeros años} 
+\label{tab:mod1_sin3}
+\end{table}
+
+La ecuación ajustada es:
+
+\begin{equation}
+	\text{Índice Producción} = 100.3677 + 0.1025 t + 0.0018 t^2
+\end{equation}
+
+\begin{figure*}[!ht]
+    \includegraphics{p3_diag_mod1_sin3.pdf}
+    \caption{Gráficos de diagnóstico modelo tendencia cuadrática sin tres primeros años}
+    \label{fig:p3_diag_mod1_sin3.pdf}
+\end{figure*}
+
+\subsection*{Modelo aditivo de tendencia cúbica}
+
+El modelo con tendencia cúbica está dado por:
+
+\begin{equation} \label{eq:mod2_sin3}
+	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t
+\end{equation}
+
+En la Tabla~\ref{tab:mod2_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_sin3}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrrl}
+          & Estimado & Error Estd. & Valor t & Pr($>$$|$t$|$) & \\ 
+  \hline
+$\beta_0$ & 87.3384 & 0.3154 & 276.945 & $<2E^{-16}$ & *** \\ 
+  $\beta_1$ & 0.1608 & 0.0108 & 14.927 & $<2E^{-16}$ & *** \\ 
+  $\beta_2$ & -0.0009 & 0.0001 & -9.308 & $<2E^{-16}$ & *** \\ 
+  $\beta_3$ & $5.207E^{-6}$ & $2.569E^{-7}$ & 20.274 & $<2E^{-16}$ & *** \\ 
+   \hline
+\end{tabular}
+\caption{Ajuste modelo tendencia cúbica sin tres primeros años} 
+\label{tab:mod2_sin3}
+\end{table}
+
+La ecuación ajustada es:
+
+\begin{equation}
+	\text{Índice Producción} = 87.3384 + 0.1608 t - 0.0009 t^2 + 5.207E^{-6} t^3
+\end{equation}
+
+\begin{figure*}[!ht]
+    \includegraphics{p3_diag_mod2_sin3.pdf}
+    \caption{Gráficos de diagnóstico modelo tendencia cúbica sin tres primeros años}
+    \label{fig:p3_diag_mod2_sin3.pdf}
+\end{figure*}
+
+\subsection*{Modelo aditivo exponencial cúbico}
+
+El modelo con tendencia exponencial cúbica está dado por:
+
+\begin{equation} \label{eq:mod3_sin3}
+	\text{Índice Producción} = e^{\beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t}
+\end{equation}
+
+En la Tabla~\ref{tab:mod3_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_sin3}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrrl}
+          & Estimado & Error Estd. & Valor t & Pr($>$$|$t$|$) & \\ 
+  \hline
+$\beta_0$ & 4.476 & $3.391E^{-3}$ & 1329.290 & $<2E^{-16}$ & *** \\ 
+  $\beta_1$ & 0.0014 & $1.076E^{-4}$ & 12.646 & $<2E^{-16}$ & *** \\ 
+  $\beta_2$ & $-4.246E^{-6}$ & $9.341E^{-7}$ & -4.545 & $<2E^{-16}$ & *** \\ 
+  $\beta_3$ & $3.027E^{-8}$ & $2.325E^{-9}$ & 13.022 & $<2E^{-16}$ & *** \\ 
+   \hline
+\end{tabular}
+\caption{Ajuste modelo tendencia cúbica exponencial sin tres primeros años} 
+\label{tab:mod3_sin3}
+\end{table}
+
+La ecuación ajustada es:
+
+\begin{equation}
+	\text{Índice Producción} = e^{4.476 + 0.0014 t - 4.246E^{-6} t^2 + 3.027E^{-8} t^3}
+\end{equation}
+
+\begin{figure*}[!ht]
+    \includegraphics{p3_diag_mod3_sin3.pdf}
+    \caption{Gráficos de diagnóstico modelo tendencia cúbica exponencial}
+    \label{fig:p3_diag_mod3_sin3.pdf}
+\end{figure*}
+
+\subsection*{Comparación de los tres modelos}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrr}
+  Modelo     & MSE & AIC & BIC \\ 
+  \hline
+Tendencia cuadrática (\ref{eq:mod1_sin3}) & 0.0081 & 1070.955 & 1085.072 \\ 
+Tendencia cúbica (\ref{eq:mod2_sin3}) & 0.0050 & 826.670 & 844.317 \\ 
+Tendencia cúbica exponencial (\ref{eq:mod3_sin3}) & 824.355 & 1134.977 & 842.002 \\ 
+   \hline
+\end{tabular}
+\caption{Comparación de los modelos sin los tres primeros años. Entre menor el criterio, mejor el modelo.} 
+\label{tab:comparacion_modelos_sin3}
+\end{table}
 
 \section*{Punto 4}
 
