@@ -40,7 +40,7 @@ No parece haber indicios claros de ciclos, la componente del error ($E_t$) de la
     \label{fig:p1_descomp}
 \end{figure*}
 
-Aunque a simple vista no se aprecia un patrón estacional en el índice de productividad, la descomposición de la serie sí muestra claramente que existe un comportamiento repetitivo cada año (ver Figura~\ref{fig:p1_descomp}). Debido a que la la variabilidad de la series es pequeña, la estacionalidad no fácil de apreciar a simple vista en la Figura~\ref{fig:p1_ind_prod}. Incluso en el box plot que compara el comportamiento de los meses (ver Figura~\ref{fig:p1_boxplot_mes}) es muy difícil ver la estacionalidad. En este taller vamos a omitir la componente estacional por que no de interés por ahora.
+Aunque a simple vista no se aprecia un patrón estacional en el índice de productividad, la descomposición de la serie sí muestra claramente que existe un comportamiento repetitivo cada año (ver Figura~\ref{fig:p1_descomp}). Debido a que la la variabilidad de la series es pequeña, la estacionalidad no fácil de apreciar a simple vista en la Figura~\ref{fig:p1_ind_prod}. Incluso en el box plot que compara el comportamiento de los meses (ver Figura~\ref{fig:p1_boxplot_mes}) es muy difícil ver la estacionalidad. En este taller vamos a omitir la componente estacional por que no es de interés por ahora.
 
 \begin{figure}[!ht]
     \includegraphics{p1_boxplot_mes.pdf}
@@ -54,26 +54,29 @@ Aunque a simple vista no se aprecia un patrón estacional en el índice de produ
 
 \section*{Punto 2}
 
-De acuerdo con lo visto gráficamente, se proponen tres modelos aditivos, el priemro de tendencia cuadrática, el segundo de tendencia cúbica y un último modelo no lineal de tendencia exponencial cúbica.
+De acuerdo con lo visto gráficamente, se proponen tres modelos aditivos, el primero de tendencia cuadrática, el segundo de tendencia cúbica y un último modelo no lineal de tendencia exponencial cúbica.
 
 \subsection*{Modelo aditivo de tendencia cuadrática}
 
-El modelo con tendencia cuadrática está dado por:
+El modelo teórico con tendencia cuadrática está dado por:
 
 \begin{equation} \label{eq:mod1_comp}
 	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + E_t
+	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
-En la Tabla~\ref{tab:mod1_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_comp}.
+En la Tabla~\ref{tab:mod1_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_comp}. 
 
 \begin{table}[ht]
 \centering
 \begin{tabular}{lrrrrl}
             & Estimado & Error Estd. & Valor t & Pr($>$$|$t$|$) & \\ 
   \hline
-  $\beta_0$ & 87.7218 & 0.5160 & 170.00 & $< 2E^{-16}$ & *** \\ 
+  $\beta_0$ & 87.7218 & 0.5160 & 170.000 & $< 2E^{-16}$ & *** \\ 
   $\beta_1$ & -0.0278 & 0.0082 & -3.368 & 0.0009 & *** \\ 
-  $\beta_2$ & 0.0008 & $2.763E^{-5}$ & 29.285 & $< 2E^{-16}$ & *** \\ 
+  $\beta_2$ & 0.0008 & $2.7630E^{-5}$ & 29.285 & $< 2E^{-16}$ & *** \\ 
+   \hline
+            & $\sqrt{MSE}=2.899$ & AIC=1435.319 & BIC=1449.971 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cuadrática} 
@@ -98,6 +101,7 @@ El modelo con tendencia cúbica está dado por:
 
 \begin{equation} \label{eq:mod2_comp}
 	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t
+	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
 En la Tabla~\ref{tab:mod2_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_comp}.
@@ -111,6 +115,8 @@ $\beta_0$ & 81.3298 & 0.3964 & 205.18 & $<2E^{-16}$ & *** \\
   $\beta_1$ & 0.2354 & 0.0119 & 19.85 & $<2E^{-16}$ & *** \\ 
   $\beta_2$ & -0.0015 & 0.0001 & -15.36 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $5.242E^{-6}$ & $2.167E^{-7}$ & 24.19 & $<2E^{-16}$ & *** \\ 
+   \hline
+            & $\sqrt{MSE}=1.660$ & AIC=1115.146 & BIC=1133.461 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica} 
@@ -135,6 +141,7 @@ El modelo con tendencia exponencial cúbica está dado por:
 
 \begin{equation} \label{eq:mod3_comp}
 	\text{Índice Producción} = e^{\beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t}
+	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
 En la Tabla~\ref{tab:mod3_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_comp}.
@@ -148,6 +155,8 @@ $\beta_0$ & 4.411 & $4.655E^{-3}$ & 947.60 & $<2E^{-16}$ & *** \\
   $\beta_1$ & 0.0021 & $1.280E^{-4}$ & 16.54 & $<2E^{-16}$ & *** \\ 
   $\beta_2$ & $-1.003E^{-5}$ & $9.673E^{-7}$ & -10.37 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $3.553E^{-8}$ & $2.099E^{-9}$ & 16.93 & $<2E^{-16}$ & *** \\ 
+   \hline
+   & $\sqrt{MSE}=1.718$ & AIC=1134.977 & BIC=1153.292 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica exponencial} 
@@ -171,11 +180,11 @@ La ecuación ajustada es:
 \begin{table}[ht]
 \centering
 \begin{tabular}{lrrr}
-  Modelo     & MSE & AIC & BIC \\ 
+  Modelo     & $\sqrt{MSE}$ & AIC & BIC \\ 
   \hline
-Tendencia cuadrática (\ref{eq:mod1_comp}) & 0.0102 & 1435.319 & 1449.971 \\ 
-Tendencia cúbica (\ref{eq:mod2_comp}) & 0.0058 & 1115.146 & 1133.461 \\ 
-Tendencia cúbica exponencial (\ref{eq:mod3_comp}) & 0.0060 & 1134.977 & 1153.292 \\ 
+Tendencia cuadrática (\ref{eq:mod1_comp}) & 2.899 & 1435.319 & 1449.971 \\ 
+Tendencia cúbica (\ref{eq:mod2_comp}) & 1.660 & 1115.146 & 1133.461 \\ 
+Tendencia cúbica exponencial (\ref{eq:mod3_comp}) & 1.718 & 1134.977 & 1153.292 \\ 
    \hline
 \end{tabular}
 \caption{Comparación de los modelos. Entre menor el criterio, mejor el modelo.} 
@@ -189,10 +198,11 @@ Ahora sin tener en cuenta los tres primeros años de la serie se ajustan los mod
 
 \subsection*{Modelo aditivo de tendencia cuadrática}
 
-El modelo con tendencia cuadrática está dado por:
+El modelo teórico con tendencia cuadrática está dado por:
 
 \begin{equation} \label{eq:mod1_sin3}
 	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + E_t
+	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
 En la Tabla~\ref{tab:mod1_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_sin3}.
@@ -205,6 +215,8 @@ En la Tabla~\ref{tab:mod1_sin3} se muestran los resultados de la estimación del
   $\beta_0$ & 100.3677 & 0.3334 & 301.05 & $< 2E^{-16}$ & *** \\ 
   $\beta_1$ & 0.1025 & 0.0106 & 9.65 & $< 2E^{-16}$ & *** \\ 
   $\beta_2$ & 0.0018 & 0.0001 & 24.97 & $< 2E^{-16}$ & *** \\ 
+   \hline
+   & $\sqrt{MSE}=2.899$ & AIC=1070.955 & BIC=1085.072 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cuadrática sin tres primeros años} 
@@ -229,6 +241,7 @@ El modelo con tendencia cúbica está dado por:
 
 \begin{equation} \label{eq:mod2_sin3}
 	\text{Índice Producción} = \beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t
+	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
 En la Tabla~\ref{tab:mod2_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_sin3}.
@@ -242,6 +255,8 @@ $\beta_0$ & 87.3384 & 0.3154 & 276.945 & $<2E^{-16}$ & *** \\
   $\beta_1$ & 0.1608 & 0.0108 & 14.927 & $<2E^{-16}$ & *** \\ 
   $\beta_2$ & -0.0009 & 0.0001 & -9.308 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $5.207E^{-6}$ & $2.569E^{-7}$ & 20.274 & $<2E^{-16}$ & *** \\ 
+   \hline
+   & $\sqrt{MSE}=1.233$ & AIC=826.670 & BIC=844.317 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica sin tres primeros años} 
@@ -266,6 +281,7 @@ El modelo con tendencia exponencial cúbica está dado por:
 
 \begin{equation} \label{eq:mod3_sin3}
 	\text{Índice Producción} = e^{\beta_0 + \beta_1 t + \beta_2 t^2 + \beta_3 t^3 + E_t}
+	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
 En la Tabla~\ref{tab:mod3_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_sin3}.
@@ -279,6 +295,8 @@ $\beta_0$ & 4.476 & $3.391E^{-3}$ & 1329.290 & $<2E^{-16}$ & *** \\
   $\beta_1$ & 0.0014 & $1.076E^{-4}$ & 12.646 & $<2E^{-16}$ & *** \\ 
   $\beta_2$ & $-4.246E^{-6}$ & $9.341E^{-7}$ & -4.545 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $3.027E^{-8}$ & $2.325E^{-9}$ & 13.022 & $<2E^{-16}$ & *** \\ 
+   \hline
+   & $\sqrt{MSE}=1.227$ & AIC=824.355 & BIC=842.002 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica exponencial sin tres primeros años} 
