@@ -161,7 +161,7 @@ p2_mod1_g1 <- ggplot(data = datos) + theme_bw(8) +
        title = 'Serie original vs modelo cuadrático ajustado')
 
 p2_mod1_g2 <- ggplot(data = datos) + theme_bw(8) +
-  geom_line(aes(x = aju_mod1_com, y = res_mod1_com)) +
+  geom_point(aes(x = aju_mod1_com, y = res_mod1_com), size = 1) +
   geom_abline(intercept = 0, slope = 0, colour = 'red', linetype = 2) +
   labs(x = 'Valores ajustados',
        y = 'Residuales estudentizados',
@@ -199,7 +199,7 @@ p2_mod2_g1 <- ggplot(data = datos) + theme_bw(8) +
        title = 'Serie original vs modelo cúbico ajustado')
 
 p2_mod2_g2 <- ggplot(data = datos) + theme_bw(8) +
-  geom_line(aes(x = aju_mod2_com, y = res_mod2_com)) +
+  geom_point(aes(x = aju_mod2_com, y = res_mod2_com), size = 1) +
   geom_abline(intercept = 0, slope = 0, colour = 'red', linetype = 2) +
   labs(x = 'Valores ajustados',
        y = 'Residuales estudentizados',
@@ -240,7 +240,7 @@ p2_mod3_g1 <- ggplot(data = datos) + theme_bw(8) +
        title = 'Serie original vs modelo cúbico expoencial ajustado')
 
 p2_mod3_g2 <- ggplot(data = datos) + theme_bw(8) +
-  geom_line(aes(x = aju_mod3_com, y = res_mod3_com)) +
+  geom_point(aes(x = aju_mod3_com, y = res_mod3_com), size = 1) +
   geom_abline(intercept = 0, slope = 0, colour = 'red', linetype = 2) +
   labs(x = 'Valores ajustados',
        y = 'Residuales',
@@ -294,7 +294,7 @@ p3_mod12_g1 <- ggplot(data = datos2) + theme_bw(8) +
        title = 'Serie original vs modelo cuadrático ajustado')
 
 p3_mod12_g2 <- ggplot(data = datos2) + theme_bw(8) +
-  geom_line(aes(x = aju_mod12_com, y = res_mod12_com)) +
+  geom_point(aes(x = aju_mod12_com, y = res_mod12_com), size = 1) +
   geom_abline(intercept = 0, slope = 0, colour = 'red', linetype = 2) +
   labs(x = 'Valores ajustados',
        y = 'Residuales estudentizados',
@@ -332,7 +332,7 @@ p3_mod22_g1 <- ggplot(data = datos2) + theme_bw(8) +
        title = 'Serie original vs modelo cúbico ajustado')
 
 p3_mod22_g2 <- ggplot(data = datos2) + theme_bw(8) +
-  geom_line(aes(x = aju_mod22_com, y = res_mod22_com)) +
+  geom_point(aes(x = aju_mod22_com, y = res_mod22_com), size = 1) +
   geom_abline(intercept = 0, slope = 0, colour = 'red', linetype = 2) +
   labs(x = 'Valores ajustados',
        y = 'Residuales estudentizados',
@@ -373,7 +373,7 @@ p3_mod32_g1 <- ggplot(data = datos2) + theme_bw(8) +
        title = 'Serie original vs modelo cúbico expoencial ajustado')
 
 p3_mod32_g2 <- ggplot(data = datos2) + theme_bw(8) +
-  geom_line(aes(x = aju_mod32_com, y = res_mod32_com)) +
+  geom_point(aes(x = aju_mod32_com, y = res_mod32_com), size = 1) +
   geom_abline(intercept = 0, slope = 0, colour = 'red', linetype = 2) +
   labs(x = 'Valores ajustados',
        y = 'Residuales',
