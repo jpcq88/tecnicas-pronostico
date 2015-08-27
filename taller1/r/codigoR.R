@@ -12,11 +12,16 @@ library(xtable) # exportar tablas en formato LaTeX
 theme_set(theme_bw(base_size = 7)) # definir tamaño de fuente gráficos ggplot2
 
 ## Funciones auxiliares
-ggqqplot <- function(mod){
+ggqqplot <- function(mod, resid.type = 'student'){
   # Devuelve un gráfico qqplot al estilo ggplot2
   
-  # res_std <- rstudent(mod)
-  res_std <- resid(mod) # descomentar para usar con modelo no lineal
+  if (resid.type == 'student'){
+    res_std <- rstudent(mod)
+  } else if (resid.type == 'regular'){
+    # cuando el modelo ajustado es o lineal (función nls())
+    res_std <- resid(mod)
+  }
+  
   val_aju <- fitted(mod)
   
   # Almacenar los datos en un data frame para poder usar ggplot
@@ -54,6 +59,22 @@ ggqqplot <- function(mod){
     theme(plot.margin = unit(c(0.1,0.1,0,0), "lines"),
           panel.border = element_blank(),
           axis.ticks = element_blank())
+}
+
+C_p <- function(residuales, type = 'AIC', p = 1){
+  # calcula criterio de comparación de modelos C*(p)
+  # recibe los residuales en un vector y el tipo de criterio, AIC o BIA
+  # p = número de parámetros incluido el intercepto
+  
+  n <- length(residuales)
+  
+  if (type == 'AIC'){
+    c_p <- log((1 / n) * sum(residuales^2)) + 2*p/n
+  } else if (type == 'BIC'){
+    c_p <- log((1 / n) * sum(residuales^2)) + 2*log(n)/n
+  }
+  
+  return(c_p)
 }
 
 ## Lectura de datos
@@ -253,7 +274,7 @@ p2_mod3_g3 <- ggplot(data = datos) + theme_bw(8) +
        y = 'Residuales',
        title = 'Análisis residuales')
 
-p2_mod3_g4 <- ggqqplot(mod3)
+p2_mod3_g4 <- ggqqplot(mod3, resid.type = 'regular')
 
 pdf('../img/p2_diag_mod3_comp.pdf', width = 7, height = 7)
 grid.arrange(p2_mod3_g1, p2_mod3_g2, p2_mod3_g3, p2_mod3_g4,
@@ -261,6 +282,12 @@ grid.arrange(p2_mod3_g1, p2_mod3_g2, p2_mod3_g3, p2_mod3_g4,
 dev.off()
 
 # Comparación de los modelos
+C_p(residuales = resid(mod1), type = 'AIC', p = 3)
+C_p(residuales = resid(mod2), type = 'AIC', p = 4)
+C_p(residuales = resid(mod3), type = 'AIC', p = 4)
+C_p(residuales = resid(mod1), type = 'BIC')
+C_p(residuales = resid(mod2), type = 'BIC')
+C_p(residuales = resid(mod3), type = 'BIC')
 summary(mod1)
 summary(mod2)
 summary(mod3)
@@ -386,7 +413,7 @@ p3_mod32_g3 <- ggplot(data = datos2) + theme_bw(8) +
        y = 'Residuales',
        title = 'Análisis residuales')
 
-p3_mod32_g4 <- ggqqplot(mod32)
+p3_mod32_g4 <- ggqqplot(mod32, resid.type = 'regular')
 
 pdf('../img/p3_diag_mod3_sin3.pdf', width = 7, height = 7)
 grid.arrange(p3_mod32_g1, p3_mod32_g2, p3_mod32_g3, p3_mod32_g4,
@@ -394,6 +421,12 @@ grid.arrange(p3_mod32_g1, p3_mod32_g2, p3_mod32_g3, p3_mod32_g4,
 dev.off()
 
 # Comparación de los modelos
+C_p(residuales = resid(mod12), type = 'AIC', p = 3)
+C_p(residuales = resid(mod22), type = 'AIC', p = 4)
+C_p(residuales = resid(mod32), type = 'AIC', p = 4)
+C_p(residuales = resid(mod12), type = 'BIC')
+C_p(residuales = resid(mod22), type = 'BIC')
+C_p(residuales = resid(mod32), type = 'BIC')
 summary(mod12)
 summary(mod22)
 summary(mod32)

@@ -13,7 +13,7 @@
 
 \title{Taller 1: Análisis Índice de Productividad - Canadá}
 \author{Juan Pablo Calle Quintero}
-\date{25 de agosto de 2015}
+\date{27 de agosto de 2015}
 
 \begin{document}
 \maketitle
@@ -32,6 +32,8 @@ Viendo el gráfico de la serie no es muy claro si su varianza es constante o no.
 
 Los primeros dos años de la serie (1950 y 1951) parecen tener un comportamiento diferente al resto, con un crecimiento considerablemente mayor comparado con los años siguientes, por lo que se podría pensar en un posible cambio estuctural de la serie a partir de 1952. Quizá una recesión económica o el fin de la participación de Candá en la guerra de Corea tengan que ver con este cambio. \footnote{Historica Canada. 2015. [En línea]. Tomado de http://www.thecanadianencyclopedia.ca/en/article/korean-war/} También es posible que se deba a un cambio en la medición del ídice.
 
+La serie sí parece tener ciclos, aunque no muy perceptibles, por ejemplo entre 1950 y 1956, o entre 1956 y 1961. La componente del error ($E_t$) de la Figura~\ref{fig:p1_descomp} muestra algunos tramos que duran más de una año y que podrían ser de crecimiento o de recesión.
+
 No parece haber indicios claros de ciclos, la componente del error ($E_t$) de la Figura~\ref{fig:p1_descomp} no tiene patrones observables mayores a un año que nos haga pensar en la presencia de ciclos.
 
 \begin{figure*}[!ht]
@@ -41,6 +43,8 @@ No parece haber indicios claros de ciclos, la componente del error ($E_t$) de la
 \end{figure*}
 
 Aunque a simple vista no se aprecia un patrón estacional en el índice de productividad, la descomposición de la serie sí muestra claramente que existe un comportamiento repetitivo cada año (ver Figura~\ref{fig:p1_descomp}). Debido a que la la variabilidad de la series es pequeña, la estacionalidad no fácil de apreciar a simple vista en la Figura~\ref{fig:p1_ind_prod}. Incluso en el box plot que compara el comportamiento de los meses (ver Figura~\ref{fig:p1_boxplot_mes}) es muy difícil ver la estacionalidad. En este taller vamos a omitir la componente estacional por que no es de interés por ahora.
+
+
 
 \begin{figure}[!ht]
     \includegraphics{p1_boxplot_mes.pdf}
@@ -65,7 +69,7 @@ El modelo teórico con tendencia cuadrática está dado por:
 	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
-En la Tabla~\ref{tab:mod1_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_comp}. 
+En la Tabla~\ref{tab:mod1_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_comp}. Los parámetros del modelos son significatavos con un nivel de confianza alto, mayor incluso al 99 \%. Sin embargo esto no significa que el modelo sea el más adecuado. \textbf{Los residuales no parecen cumplir con el supuesto de independencia, precisamente por la incapacidad del modelo para ajustarse a los ciclos, por lo que no tendría mucho sentido realizar la prueba de normalidad.} sin embargo se muestra el gráfico para hacerce una idea de la posible distribución de los residuales. La varianza de los errores sí parece costante ya que no se aprecian dendencias o patrones a través del tiempo.
 
 \begin{table}[ht]
 \centering
@@ -76,12 +80,18 @@ En la Tabla~\ref{tab:mod1_comp} se muestran los resultados de la estimación del
   $\beta_1$ & -0.0278 & 0.0082 & -3.368 & 0.0009 & *** \\ 
   $\beta_2$ & 0.0008 & $2.7630E^{-5}$ & 29.285 & $< 2E^{-16}$ & *** \\ 
    \hline
-            & $\sqrt{MSE}=2.899$ & AIC=1435.319 & BIC=1449.971 & \\
+            & $\sqrt{MSE}=2.899$ & $C^{*}_{AIC}$=2.140 & $C^{*}_{BIC}$=2.157 & \\
    \hline
 \end{tabular}
-\caption{Ajuste modelo tendencia cuadrática} 
+\caption{Ajuste modelo tendencia cuadrática. $C^{*}_{AIC}$ y $C^{*}_{AIC}$ son los criterios de información por mínimos cuadrados equivalentes a los criterios AIC y BIC respectivamente.} 
 \label{tab:mod1_comp}
 \end{table}
+
+\begin{figure*}[!ht]
+    \includegraphics{p2_diag_mod1_comp.pdf}
+    \caption{Gráficos de diagnóstico modelo tendencia cuadrática}
+    \label{fig:p2_diag_mod1_comp.pdf}
+\end{figure*}
 
 La ecuación ajustada es:
 
@@ -89,11 +99,7 @@ La ecuación ajustada es:
 	\text{Índice Producción} = 87.7218 -0.0278 t + 0.0008 t^2
 \end{equation}
 
-\begin{figure*}[!ht]
-    \includegraphics{p2_diag_mod1_comp.pdf}
-    \caption{Gráficos de diagnóstico modelo tendencia cuadrática}
-    \label{fig:p2_diag_mod1_comp.pdf}
-\end{figure*}
+En ambos gráficos de residuales, vs ajustados y el tiempo, de la Figura~\ref{fig:p2_diag_mod1_comp.pdf} vemos que los errores del modelo no parecen seguir un patrón aleatorio. En gran parte debido a la carencia de ajuste, ya que el modelo no logra capturar los posibles ciclos presentes en la serie. Ademá se ve que no es capaz de ajustarse adecuadamente a los primeros años de la serie, debido al comportamiento un poco diferente al resto de los años. Esto se ve reflejado en los grandes valores de los residuales en estos primeros periodos.
 
 \subsection*{Modelo aditivo de tendencia cúbica}
 
@@ -104,7 +110,7 @@ El modelo con tendencia cúbica está dado por:
 	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
-En la Tabla~\ref{tab:mod2_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_comp}.
+En la Tabla~\ref{tab:mod2_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_comp}. Este modelo parece ajustar un poco mejor que el de tendencia cuadrática ya que el el término cúbico le da más flexibilidad para adaptarse a las curvas (ciclos). Todos los parámetros del modelo son significativos y las medidad de comparación de modelos nos confirman que este modelo es mejor, tanto la raiz del error cuadrático medio, como el AIC y el BIC son menores que el modelo anterior. Ver Tabla~\ref{tab:mod2_comp}.
 
 \begin{table}[ht]
 \centering
@@ -116,7 +122,7 @@ $\beta_0$ & 81.3298 & 0.3964 & 205.18 & $<2E^{-16}$ & *** \\
   $\beta_2$ & -0.0015 & 0.0001 & -15.36 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $5.242E^{-6}$ & $2.167E^{-7}$ & 24.19 & $<2E^{-16}$ & *** \\ 
    \hline
-            & $\sqrt{MSE}=1.660$ & AIC=1115.146 & BIC=1133.461 & \\
+            & $\sqrt{MSE}=1.660$ & $C^{*}_{AIC}$=1.027 & $C^{*}_{BIC}$=1.039 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica} 
@@ -128,6 +134,8 @@ La ecuación ajustada es:
 \begin{equation}
 	\text{Índice Producción} = 81.3298 + 0.2354 t - 0.0015 t^2 + 5.242E^{-6} t^3
 \end{equation}
+
+A pesar del mejor ajuste, los residuales siguen mostrando la debilidad del modelo para capturar los cilcos de la serie (ver Figura~\ref{fig:p2_diag_mod2_comp.pdf}, pues estos no muestran un comportamiento eleatorio al rededor de cero. En este caso tampoco tendría mucho sentido interpretar las pruebas de normalidad, pero se muestran como ejercicio de verificación.
 
 \begin{figure*}[!ht]
     \includegraphics{p2_diag_mod2_comp.pdf}
@@ -144,7 +152,7 @@ El modelo con tendencia exponencial cúbica está dado por:
 	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
-En la Tabla~\ref{tab:mod3_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_comp}.
+En la Tabla~\ref{tab:mod3_comp} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_comp}. El modelo de tendencia cúbica exponencial muestra un comportamiento muy parecido al modelo cúbico, con mejor ajuste en llas curvas de la serie. Sin embargo, aqunque todos los parámetros son significativos con un nivel de confianza del 99 \%, todos los criterios de comparación de modelos,  $\sqrt{MSE}$, $C^{*}_(AIC)$ y $C^{*}_{BIC}$ muestran que es mejor el modelo cúbico (\ref{eq:mod2_comp}) para representar los datos.
 
 \begin{table}[ht]
 \centering
@@ -156,7 +164,7 @@ $\beta_0$ & 4.411 & $4.655E^{-3}$ & 947.60 & $<2E^{-16}$ & *** \\
   $\beta_2$ & $-1.003E^{-5}$ & $9.673E^{-7}$ & -10.37 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $3.553E^{-8}$ & $2.099E^{-9}$ & 16.93 & $<2E^{-16}$ & *** \\ 
    \hline
-   & $\sqrt{MSE}=1.718$ & AIC=1134.977 & BIC=1153.292 & \\
+   & $\sqrt{MSE}=1.718$ & $C^{*}_{AIC}$=1.096 & $C^{*}_{BIC}$=1.108 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica exponencial} 
@@ -177,19 +185,22 @@ La ecuación ajustada es:
 
 \subsection*{Comparación de los tres modelos}
 
+De acuerdo con los criterios de selección de modelos mostrados en la Tabla~\ref{tab:comparacion_modelos}, el de tendencia cúbica tiene todos los valores menosres que los otros dos modelos de tendencia cuadrática y cúbica exponencial.
+
 \begin{table}[ht]
 \centering
 \begin{tabular}{lrrr}
-  Modelo     & $\sqrt{MSE}$ & AIC & BIC \\ 
+  Modelo     & $\sqrt{MSE}$ & $C^{*}_{AIC}$ & $C^{*}_{BIC}$ \\ 
   \hline
-Tendencia cuadrática (\ref{eq:mod1_comp}) & 2.899 & 1435.319 & 1449.971 \\ 
-Tendencia cúbica (\ref{eq:mod2_comp}) & 1.660 & 1115.146 & 1133.461 \\ 
-Tendencia cúbica exponencial (\ref{eq:mod3_comp}) & 1.718 & 1134.977 & 1153.292 \\ 
+Tendencia cuadrática (\ref{eq:mod1_comp}) & 2.899 & 2.139 & 2.157 \\ 
+Tendencia cúbica (\ref{eq:mod2_comp}) & 1.660 & 1.027 & 1.039 \\ 
+Tendencia cúbica exponencial (\ref{eq:mod3_comp}) & 1.718 & 1.096 & 1.108 \\ 
    \hline
 \end{tabular}
 \caption{Comparación de los modelos. Entre menor el criterio, mejor el modelo.} 
 \label{tab:comparacion_modelos}
 \end{table}
+
 
 
 \section*{Punto 3}
@@ -205,7 +216,7 @@ El modelo teórico con tendencia cuadrática está dado por:
 	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
-En la Tabla~\ref{tab:mod1_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_sin3}.
+En la Tabla~\ref{tab:mod1_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod1_sin3}. Los parámetros del modelo son ignificativos todas con un nivel de confianza del 99 \%. 
 
 \begin{table}[ht]
 \centering
@@ -216,7 +227,7 @@ En la Tabla~\ref{tab:mod1_sin3} se muestran los resultados de la estimación del
   $\beta_1$ & 0.1025 & 0.0106 & 9.65 & $< 2E^{-16}$ & *** \\ 
   $\beta_2$ & 0.0018 & 0.0001 & 24.97 & $< 2E^{-16}$ & *** \\ 
    \hline
-   & $\sqrt{MSE}=2.899$ & AIC=1070.955 & BIC=1085.072 & \\
+   & $\sqrt{MSE}=2.899$ & $C^{*}_{AIC}$=1.404 & $C^{*}_{BIC}$=1.424 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cuadrática sin tres primeros años} 
@@ -228,6 +239,8 @@ La ecuación ajustada es:
 \begin{equation}
 	\text{Índice Producción} = 100.3677 + 0.1025 t + 0.0018 t^2
 \end{equation}
+
+Si bien en este caso el comportamiento de los residuales mejoró un poco, en el sentido de que en los primeros años ya no se ven los error tan pronunciados, el modelo sigue incapaz de capturar lo ciclos.
 
 \begin{figure*}[!ht]
     \includegraphics{p3_diag_mod1_sin3.pdf}
@@ -244,7 +257,7 @@ El modelo con tendencia cúbica está dado por:
 	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
-En la Tabla~\ref{tab:mod2_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_sin3}.
+En la Tabla~\ref{tab:mod2_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod2_sin3}. En este modelo todos los parámetros son significativos con un nivel de confianza del 99 \%. Además mejora considerablemente los criterios de comparación, por ejemplo el $C^{*}_{BIC}$ pasa de 1.424 a 0.447, casi un tercio del anterior.
 
 \begin{table}[ht]
 \centering
@@ -256,7 +269,7 @@ $\beta_0$ & 87.3384 & 0.3154 & 276.945 & $<2E^{-16}$ & *** \\
   $\beta_2$ & -0.0009 & 0.0001 & -9.308 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $5.207E^{-6}$ & $2.569E^{-7}$ & 20.274 & $<2E^{-16}$ & *** \\ 
    \hline
-   & $\sqrt{MSE}=1.233$ & AIC=826.670 & BIC=844.317 & \\
+   & $\sqrt{MSE}=1.233$ & $C^{*}_{AIC}$=0.435 & $C^{*}_{BIC}$=0.447 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica sin tres primeros años} 
@@ -268,6 +281,8 @@ La ecuación ajustada es:
 \begin{equation}
 	\text{Índice Producción} = 87.3384 + 0.1608 t - 0.0009 t^2 + 5.207E^{-6} t^3
 \end{equation}
+
+Los residuales siguen mostrando el patrón de correlación debido a los ciclos (ver Figura~\ref{fig:p3_diag_mod2_sin3.pdf}), por lo que no es apropiado realizar los test de normalidad. Sin embargo, suponiendo que cumpliera, los residuales sí parecen tener una distribución noremal, el gráfico y los test de Shapiro-Wilk (p-valor=0.0873) y Kolmogorov-Smirnov (p-valor=0.6639) no muestran evidencia suficiente para rechazar $H_0$: Los errores se distribuyen normal vs. $H_a$: Los errores no se distribuyen normal. Sin embargo esta conclusión no es válida por violar el supuesto de incorrelación de los errores.
 
 \begin{figure*}[!ht]
     \includegraphics{p3_diag_mod2_sin3.pdf}
@@ -284,7 +299,7 @@ El modelo con tendencia exponencial cúbica está dado por:
 	\qquad E_t \stackrel{iid}{\sim} N(0, \sigma^2)
 \end{equation}
 
-En la Tabla~\ref{tab:mod3_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_sin3}.
+En la Tabla~\ref{tab:mod3_sin3} se muestran los resultados de la estimación del modelo~\ref{eq:mod3_sin3}. Este modelo, además de que todos los parámetros son significativos co un nivel de confianza del 99 \%, los criterios de información no son mejores que en los dos modelos anteriores, por lo que se podría pensar que este es un mejor modelo que los dos anteriores.
 
 \begin{table}[ht]
 \centering
@@ -296,7 +311,7 @@ $\beta_0$ & 4.476 & $3.391E^{-3}$ & 1329.290 & $<2E^{-16}$ & *** \\
   $\beta_2$ & $-4.246E^{-6}$ & $9.341E^{-7}$ & -4.545 & $<2E^{-16}$ & *** \\ 
   $\beta_3$ & $3.027E^{-8}$ & $2.325E^{-9}$ & 13.022 & $<2E^{-16}$ & *** \\ 
    \hline
-   & $\sqrt{MSE}=1.227$ & AIC=824.355 & BIC=842.002 & \\
+   & $\sqrt{MSE}=1.227$ & $C^{*}_{AIC}$=0.425 & $C^{*}_{BIC}$=0.438 & \\
    \hline
 \end{tabular}
 \caption{Ajuste modelo tendencia cúbica exponencial sin tres primeros años} 
@@ -309,6 +324,8 @@ La ecuación ajustada es:
 	\text{Índice Producción} = e^{4.476 + 0.0014 t - 4.246E^{-6} t^2 + 3.027E^{-8} t^3}
 \end{equation}
 
+Los residuales del modelo siguen sin poder ajustarse a los ciclos de la serie, pues presentan (ver Figura~\ref{fig:p3_diag_mod3_sin3.pdf}) muchas rachas crecientes y decreciantes. Si mejoran un poco respecto al mismo modelo con los tres años iniciales. Tambien vemos que la varianza de los residuales no parece constante, ya que va aumentando de a poco con el tiempo.
+
 \begin{figure*}[!ht]
     \includegraphics{p3_diag_mod3_sin3.pdf}
     \caption{Gráficos de diagnóstico modelo tendencia cúbica exponencial}
@@ -317,21 +334,29 @@ La ecuación ajustada es:
 
 \subsection*{Comparación de los tres modelos}
 
+De los tres modelos plantedos sin los tres primeros años, el de tendencia cúbica exponencial supera a los otros dos en todos los criterios de información, aunque en muy poco al modelo cúbico. Valdría la pena estudiar si es mejor escoger el modelo cúbico en aras de una mayor simplicidad.
+
 \begin{table}[ht]
 \centering
 \begin{tabular}{lrrr}
   Modelo     & MSE & AIC & BIC \\ 
   \hline
-Tendencia cuadrática (\ref{eq:mod1_sin3}) & 0.0081 & 1070.955 & 1085.072 \\ 
-Tendencia cúbica (\ref{eq:mod2_sin3}) & 0.0050 & 826.670 & 844.317 \\ 
-Tendencia cúbica exponencial (\ref{eq:mod3_sin3}) & 824.355 & 1134.977 & 842.002 \\ 
+Tendencia cuadrática (\ref{eq:mod1_sin3}) & 2.006 & 1.404 & 1.424 \\ 
+Tendencia cúbica (\ref{eq:mod2_sin3}) & 1.233 & 0.435 & 0.447 \\ 
+Tendencia cúbica exponencial (\ref{eq:mod3_sin3}) & 1.227 & 0.425 & 0.438 \\ 
    \hline
 \end{tabular}
 \caption{Comparación de los modelos sin los tres primeros años. Entre menor el criterio, mejor el modelo.} 
 \label{tab:comparacion_modelos_sin3}
 \end{table}
 
+
+
 \section*{Punto 4}
+
+Los primeros tres años sí  estaban teniendo un efecto importante en la estimación de la serie, pues los criteries de información mostraron mejoras considerables al eliminar estas observaciones. Con todas las observaciones el mejor modelo en términos de criterios de información parecía ser el cúbico, pero con la eliminación de los primeros tres años cambió al modelo cúbico exponencial. Sin embargo, suponiendo que el supuesto de incorrelación d elos errores se cumpliera en los modelos, cosa que no es cierta, el modelo cúbico sería mejor ya que es el que mejor se acerca a cumplir con los supuestos. Al parecer el cambio estructural que tenía la serier a partir de esos priemros trs años estaba inflando los errores, pues los modelos eran incapaces de modelar un cambio tan drástico.
+
+\pagebreak
 
 \section*{Código de R utilizado}
 % Insertar código utilizado en R
