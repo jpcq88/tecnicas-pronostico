@@ -1,5 +1,6 @@
 *.zip
 *.Rhistory
+*.RData
 *.pdf
 *.out
 *.aux
