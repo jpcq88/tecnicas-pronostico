@@ -125,13 +125,18 @@ head(datos)
 summary(datos)
 plot(datos_orig_ts)
 abline(v = 2000:2015, lty = 2)
+plot(datos_log_ts)
+abline(v = 2000:2015, lty = 2)
 
 ## 1. Análisis descriptivo de la serie -----------------------------------------
 
 # Gráficos de la serie
+marcas_anios <- seq.Date(as.Date('2000-01-01'),
+                         as.Date('2015-01-01'), by='year')
 p1_serie_orig <- ggplot(data = datos, aes(x = fecha)) +
   theme_bw() +
   geom_line(aes(y = ivand)) +
+  geom_vline(xintercept = fecha, linetype = 2, colour = 'red') +
   labs(x = '',
        y = 'IVA no deducible [1000\'s mill pesos]') +
   scale_y_continuous(labels = dollar)
@@ -302,7 +307,8 @@ grid.arrange(p1_trend_mult, p1_trend_add_log,
              nrow = 2, ncol = 2)
 
 ## 2. Postulación de modelos ---------------------------------------------------
-
+# modelo 1: logarítmico-cuadrático con estacionalidad
+# modelo 2: exponencial-cuadrático con estacionalidad
 
 ## 3. Ajuste de modelos con validación cruzada ---------------------------------
 t_ajuste <- 1:(nro_datos - 4) # dejamos los últimos 4 trimestres por fuera
@@ -324,6 +330,8 @@ resid_mod1_esc_orig <- datos_ajuste$ivand - exp(aju_mod1) * exp(.5*sigma_mod1^2)
 exp(C_p(resid_mod1_esc_orig, type = 'AIC', p = 6))
 exp(C_p(resid_mod1_esc_orig, type = 'BIC', p = 6))
 
+qt(0.025, 49) # valor crítico de t
+
 # modelo 2: exponencial-cúbico
 val_ini <- coef(mod1)
 
@@ -331,6 +339,9 @@ I2 <- ifelse(datos_ajuste$tri == 'T2', 1, 0)
 I3 <- ifelse(datos_ajuste$tri == 'T3', 1, 0)
 I4 <- ifelse(datos_ajuste$tri == 'T4', 1, 0)
 
+datos_ajuste$I2 <- I2
+datos_ajuste$I3 <- I3
+datos_ajuste$I4 <- I4
 
 mod2 <- nls(ivand ~ exp(b0 + b1*t + b2*I(t^2) + d2*I2 + d3*I3 + d4*I4),
             start = list(b0 = val_ini[1], b1 = val_ini[2], b2 = val_ini[3],
@@ -344,6 +355,42 @@ datos_ajuste$aju_mod2 <- fitted(mod2)
 exp(C_p(resid_mod2, type = 'AIC', p = 6))
 exp(C_p(resid_mod2, type = 'BIC', p = 6))
 
+# modelo 1 sin segundo y tercer trimestre
+
+mod1_sin23trim <- lm(log_ivand ~ t + I(t^2) + I4, data = datos_ajuste)
+summary(mod1_sin23trim)
+xtable(summary(mod1_sin23trim))
+
+resid_mod1_sin23trim <- resid(mod1_sin23trim)
+sigma_mod1_sin23trim <- summary(mod1_sin23trim)$sigma
+datos_ajuste$resid_mod1_sin23trim <- resid_mod1_sin23trim
+aju_mod1_sin23trim <- fitted(mod1_sin23trim)
+datos_ajuste$aju_mod1_sin23trim <- aju_mod1_sin23trim
+datos_ajuste$aju_mod1_esc_orig_sin23trim <-
+  exp(aju_mod1_sin23trim) * exp(.5*sigma_mod1_sin23trim^2)
+resid_mod1_esc_orig_sin23trim <-
+  datos_ajuste$ivand - datos_ajuste$aju_mod1_esc_orig_sin23trim
+
+# coeficientes en escala original
+exp(coef(mod1_sin23trim)) * exp(0.5*sigma_mod1_sin23trim^2)
+
+exp(C_p(resid_mod1_esc_orig_sin23trim, type = 'AIC', p = 6))
+exp(C_p(resid_mod1_esc_orig_sin23trim, type = 'BIC', p = 6))
+
+qt(0.025, 51) # valor crítico de t
+
+# modelo 2 sin segundo y tercer trimestre
+mod2_sin23trim <- nls(ivand ~ exp(b0 + b1*t + b2*I(t^2) + d4*I4),
+                      start = list(b0 = val_ini[1], b1 = val_ini[2],
+                                   b2 = val_ini[3], d4 = val_ini[6]),
+                      data = datos_ajuste)
+summary(mod2_sin23trim)
+
+resid_mod2_sin23trim <- resid(mod2_sin23trim)
+datos_ajuste$resid_mod2_sin23trim <- resid_mod2_sin23trim
+datos_ajuste$aju_mod2_sin23trim <- fitted(mod2_sin23trim)
+exp(C_p(resid_mod2_sin23trim, type = 'AIC', p = 6))
+exp(C_p(resid_mod2_sin23trim, type = 'BIC', p = 6))
 
 # modelo 3: Holt-Winters Multiplicativo
 
@@ -356,6 +403,54 @@ Yt_desc <- datos_ajuste$ivand / datos_ajuste$St
 
 ## 4. Análisis de residuales y validación de supuestos -------------------------
 
+# análisis residuales modelo 1 sin trimestres 2 y 3
+p4_base <- ggplot(data = datos_ajuste, aes(x = fecha)) + theme_bw()
+
+p4.1_mod1 <- p4_base + geom_line(aes(y = resid_mod1_sin23trim)) +
+  labs(x = 'Tiempo',
+       y  = 'Residuales')
+p4.1_mod1
+
+p4.2_mod1 <- p4_base + geom_point(aes(x = aju_mod1_sin23trim,
+                                     y = resid_mod1_sin23trim)) +
+  labs(x = 'Ajustados',
+       y = 'Residuales')
+p4.2_mod1
+
+p4.3_mod1 <- p4_base + geom_line(aes(y = ivand, colour = 'Real')) + 
+  geom_line(aes(y = aju_mod1_esc_orig_sin23trim, colour = 'Ajuste')) +
+  labs(x = 'Tiempo',
+       y = 'IVA [1000\'s mill de pesos]') +
+  scale_colour_manual("",
+                      values = c('Real'='black', 'Ajuste'='red')) +
+  theme(legend.position = c(0.15, 0.85), legend.background = element_blank())
+p4.3_mod1
+
+grid.arrange(p4.3_mod1, blankPlot, p4.1_mod1, p4.2_mod1, nrow = 2, ncol = 2)
+
+# análisis residuales modelo 2 sin trimestres 2 y 3
+
+p4.1_mod2 <- p4_base + geom_line(aes(y = resid_mod2_sin23trim)) +
+  labs(x = 'Tiempo',
+       y  = 'Residuales')
+p4.1_mod2
+
+p4.2_mod2 <- p4_base + geom_point(aes(x = aju_mod2_sin23trim,
+                                      y = resid_mod2_sin23trim)) +
+  labs(x = 'Ajustados',
+       y = 'Residuales')
+p4.2_mod2
+
+p4.3_mod2 <- p4_base + geom_line(aes(y = ivand, colour = 'Real')) + 
+  geom_line(aes(y = aju_mod2_sin23trim, colour = 'Ajuste')) +
+  labs(x = 'Tiempo',
+       y = 'IVA [1000\'s mill de pesos]') +
+  scale_colour_manual("",
+                      values = c('Real'='black', 'Ajuste'='red')) +
+  theme(legend.position = c(0.15, 0.85), legend.background = element_blank())
+p4.3_mod2
+
+grid.arrange(p4.3_mod2, blankPlot, p4.1_mod2, p4.2_mod2, nrow = 2, ncol = 2)
 
 ## 5. Pronósticos para validación cruzada --------------------------------------
 
