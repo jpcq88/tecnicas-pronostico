@@ -6,7 +6,7 @@
 #------------------------------------------------------------------------------#
 
 ## Librerías requeridas --------------------------------------------------------
-library(ggplot2) # graficos de calidad
+library(ggplot2) # gráficos de calidad
 library(grid) # para poder utilizar la función unit() en ggplot2
 library(gridExtra) # funciones auxiliares graficación múltiple, grid.arrange()
 library(dplyr) # manipulación de datos
@@ -22,7 +22,7 @@ ggqqplot <- function(mod, resid.type = 'student'){
   if (resid.type == 'student'){
     res_std <- rstudent(mod)
   } else if (resid.type == 'regular'){
-    # cuando el modelo ajustado es o lineal (función nls())
+    # cuando el modelo ajustado es no lineal (función nls())
     res_std <- resid(mod) / sd(resid(mod))
   }
   
@@ -68,7 +68,7 @@ ggqqplot <- function(mod, resid.type = 'student'){
 C_p <- function(residuales, type = 'AIC', p = 1){
   # calcula criterio de comparación de modelos C*(p)
   # recibe los residuales en un vector y el tipo de criterio, AIC o BIA
-  # p = número de parámetros incluido el intercepto
+  # p = número de parámetros, incluyendo el intercepto
   
   n <- length(residuales)
   
@@ -113,7 +113,6 @@ fecha <- seq.Date(from = as.Date('2000-03-01', '%Y-%m-%d'),
                   length.out = 59,
                   by = 'quarter')
 mes <- reorder(months.Date(fecha), c(rep(c(3, 6, 9, 12), 14), 3, 6, 9))
-relevel(mes, ref = 'December')
 tri <- gl(n = 4, k = 1, length = 59, labels = c('T1', 'T2', 'T3', 'T4'))
 log_ivand <- log(datos_orig)
 names(log_ivand) <- 'log_ivand'
