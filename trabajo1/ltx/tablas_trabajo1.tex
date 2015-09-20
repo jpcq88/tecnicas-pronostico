@@ -1,0 +1,121 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\spanishdecimal{.}
+
+%\usepackage{booktabs}
+\usepackage{mathptmx}
+%\usepackage{fontspec}
+%\setmainfont{Times New Roman}
+
+\title{Trabajo 1: Análisis IVA Colombia}
+\author{Juan Pablo Calle Quintero}
+
+\begin{document}
+\maketitle
+
+\section*{Punto 1}
+
+% parámetros ajustados modelo 1
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrr}
+\hline
+ Parámetro & Estimación & Error estándar & Valor $t_0$ & Pr($t_{49}>$$|t_0|$) \\ 
+  \hline
+$\beta_0$ & 7.4488 & 0.0244 & 305.85 & $<$2$\times10^{-16}$ \\ 
+  $\beta_1$ & 0.0471 & 0.0018 & 26.30 & $<$2$\times10^{-16}$ \\ 
+  $\beta_2$ & -0.0003 & 3.097$\times10^{-5}$ & -9.18 & 3.14$\times10^{-12}$ \\ 
+  $\delta_2$ & 0.0262 & 0.0195 & 1.34 & 0.1857 \\ 
+  $\delta_3$ & 0.0394 & 0.0195 & 2.02 & 0.0490 \\ 
+  $\delta_4$ & 0.1315 & 0.0199 & 6.60 & 2.78$\times10^{-8}$ \\ 
+   \hline
+	$AIC=$ 114754.0 & $BIC=$ 142846.8 & & & \\
+	\hline
+\end{tabular}
+\end{table}
+
+% parámetros ajustados modelo 2
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrr}
+\hline
+ Parámetro& Estimación & Error estándar & Valor $t_0$ & Pr($t_{49}>$$|t_0|$) \\ 
+  \hline
+$\beta_0$ & 7.465 & 0.0486 & 153.529 & $<$2$\times10^{-16}$ \\ 
+  $\beta_1$ & 0.0467 & 0.0028 & 16.491 & $<$2$\times10^{-16}$ \\ 
+  $\beta_2$ & -0.0003 & 4.038$\times10^{-5}$ & -6.957 & 7.73$\times10^{-9}$ \\ 
+  $\delta_2$ & 0.0228 & 0.0204 & 1.116 & 0.2700 \\ 
+  $\delta_3$ & 0.0312 & 0.0202 & 1.545 & 0.129 \\ 
+  $\delta_4$ & 0.1198 & 0.0200 & 5.985 & 2.47$\times10^{-7}$ \\ 
+   \hline
+	$AIC=$ 113631.6 & $BIC=$ 141449.6 & & & \\
+	\hline
+\end{tabular}
+\end{table}
+
+% resumen LOESS lineal
+\begin{table}[ht]
+\centering
+\begin{tabular}{lr}
+ Ajuste LOESS lineal & \\ 
+ \hline
+ Número de observaciones & 338 \\
+ Número equivalente de parámetros & 29.07 \\
+ $\sqrt{MSE}$ & 0.099 \\
+ Traza matriz de suavizamiento & 34.38\\
+Grado polinomio local & 1 (lineal)\\
+   \hline
+\end{tabular}
+\end{table}
+
+% resumen LOESS cuadrático
+\begin{table}[ht]
+\centering
+\begin{tabular}{lr}
+ Ajuste LOESS cuadrático & \\ 
+ \hline
+ Número de observaciones & 338 \\
+ Número equivalente de parámetros & 9.38 \\
+ $\sqrt{MSE}$ & 0.1721 \\
+ Traza matriz de suavizamiento & 10.36\\
+Grado polinomio local & 2 (cuadrático)\\
+   \hline
+\end{tabular}
+\end{table}
+
+% resumen modelo lieneal log-cuadrático
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrr}
+
+ Parámetro & Estimado & Error Estd. & Valor t & Pr($t_{335}>$$|$t$|$) \\ 
+  \hline
+$\beta_0$ & -0.4016 & 0.0342 & -11.73 & $<$2$\times10^{-16}$ \\ 
+  $\beta_1$ & -0.0104 & 0.0005 & -22.21 & $<$2$\times10^{-16}$ \\ 
+  $\beta_2$ & 4.202$\times10^{-5}$ & 1.332$\times10^{-6}$ & 31.54 & $<$2$\times10^{-16}$ \\ 
+   \hline
+   $\sqrt{MSE}=0.2086$\\
+   \hline
+\end{tabular}
+\end{table}
+
+% resumen modelo lineal exponencial
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrr}
+
+ Parámetro & Estimado & Error Estd. & Valor t & Pr($t_{335}>$$|$t$|$) \\ 
+  \hline
+$\beta_0$ & -0.4901 & 0.0604 & -8.109 & 9.74$\times10^{-15}$ \\ 
+  $\beta_1$ & -0.0075 & 0.0007 & -10.623 & $<$2$\times10^{-16}$ \\ 
+  $\beta_2$ & 3.331$\times10^{-5}$ & 1.790$\times10^{-6}$ & 18.608 & $<$2$\times10^{-16}$ \\ 
+   \hline
+   $\sqrt{MSE}=0.2052$\\
+   \hline
+\end{tabular}
+\end{table}
+
+
+\end{document}

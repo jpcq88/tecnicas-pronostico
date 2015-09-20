@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------#
-# Código R trabajo 1: Análisis PIB Colombia por Ramas Actividad Económica      #
+# Código R trabajo 1: Análisis IVA No Deducible en Colombia                    #
 # Autor: Juan Pablo Calle Quintero                                             #
 # Fecha: 24/09/2015                                                            #
 # Correo: jpcalleq@unal.edu.co                                                 #
@@ -81,6 +81,21 @@ C_p <- function(residuales, type = 'AIC', p = 1){
   return(c_p)
 }
 
+# Gráfico en blanco para usar en función grid.arrange()
+blankPlot <- ggplot() + geom_blank(aes(1, 1)) +
+  theme(
+    plot.background = element_blank(), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line = element_blank()
+  )
 
 ## Lectura de datos ------------------------------------------------------------
 datos_orig <- read.table('../datos/datos.csv', header = FALSE, skip = 11,
@@ -88,54 +103,53 @@ datos_orig <- read.table('../datos/datos.csv', header = FALSE, skip = 11,
                          colClasses = c(rep("NULL", 12),
                                         "numeric",
                                         rep("NULL", 5)))
-names(datos_orig) <- 'pib'
+names(datos_orig) <- 'ivand'
+nro_datos <- nrow(datos_orig)
 datos_orig_ts <- ts(datos_orig, freq = 4, start = c(2000, 1))
 datos_log_ts <- ts(log(datos_orig), freq = 4, start = c(2000, 1))
-datos_orig
-datos_orig_ts
-datos_log_ts
 
-## Organizamos los datos y le damos el formato adecuado
+# organizamos los datos y le damos el formato adecuado
 fecha <- seq.Date(from = as.Date('2000-03-01', '%Y-%m-%d'),
                   length.out = 59,
                   by = 'quarter')
 mes <- reorder(months.Date(fecha), c(rep(c(3, 6, 9, 12), 14), 3, 6, 9))
 relevel(mes, ref = 'December')
-log_pib <- log(datos_orig)
-names(log_pib) <- 'log_pib'
-datos <- data.frame(mes, fecha, datos_orig, log_pib)
+tri <- gl(n = 4, k = 1, length = 59, labels = c('T1', 'T2', 'T3', 'T4'))
+log_ivand <- log(datos_orig)
+names(log_ivand) <- 'log_ivand'
+datos <- data.frame(mes, tri, fecha, datos_orig, log_ivand)
 head(datos)
-str(datos)
+
 
 ## Análisis exploratorio inicial -----------------------------------------------
 summary(datos)
 plot(datos_orig_ts)
-
+abline(v = 2000:2015, lty = 2)
 
 ## 1. Análisis descriptivo de la serie -----------------------------------------
 
 # Gráficos de la serie
 p1_serie_orig <- ggplot(data = datos, aes(x = fecha)) +
   theme_bw() +
-  geom_line(aes(y = pib)) +
+  geom_line(aes(y = ivand)) +
   labs(x = '',
-       y = 'PIB [1000\'s mill pesos]')
+       y = 'IVA no deducible [1000\'s mill pesos]') +
+  scale_y_continuous(labels = dollar)
 p1_serie_orig
 
 p1_serie_log <- ggplot(data = datos, aes(x = fecha)) +
   theme_bw() +
-  geom_line(aes(y = log_pib)) +
+  geom_line(aes(y = log_ivand)) +
   labs(x = '',
-       y = 'log(PIB [1000\'s mill pesos])')
+       y = 'log(IVA no deducible [1000\'s mill pesos])')
 p1_serie_log
 
-
-## 2. Postulación de modelos ---------------------------------------------------
+grid.arrange(p1_serie_orig, p1_serie_log,
+             layout_matrix = matrix(c(1, 2), nrow = 1, byrow = TRUE))
 
 # Gráficos descomposición de la serie
-ts_desc_orig <- decompose(datos_orig_ts)
+ts_desc_orig <- decompose(datos_orig_ts, type = 'multiplicative')
 
-pdf('../img/p1_descomp.pdf', width = 7, height = 4)
 opar <- par()
 par(mfrow = c(4, 1),
     oma = c(1, 1, 1, 1),
@@ -160,11 +174,20 @@ plot(ts_desc_orig$random,
      ylab = expression(paste(E[t])))
 abline(h = 0, lty = 2, col =  'red')
 par(opar)
-dev.off()
+
+# Gráfico de la tendencia multiplicativa
+datos$trend_mult <- as.vector(ts_desc_orig$trend)
+datos_trend <- datos[!is.na(datos$trend_mult), ]
+
+p1_trend_mult <- ggplot(data = datos_trend, aes(x = fecha)) +
+  theme_bw() +
+  geom_line(aes(y = trend_mult)) +
+  labs(x = '',
+       y = expression(paste(S[t])))
+p1_trend_mult
 
 ts_desc_log <- decompose(datos_log_ts, type = 'additive')
 
-pdf('../img/p1_descomp_log.pdf', width = 7, height = 4)
 opar <- par()
 par(mfrow = c(4, 1),
     oma = c(1, 1, 1, 1),
@@ -189,22 +212,31 @@ plot(ts_desc_log$random,
      ylab = expression(paste(E[t])))
 abline(h = 0, lty = 2, col =  'red')
 par(opar)
-dev.off()
+
+# Gráfico de la tendencia aditiva  del logaritmo
+datos$trend_add_log <- as.vector(ts_desc_log$trend)
+datos_trend$trend_add_log <- datos[!is.na(datos$trend_add_log), 'trend_add_log']
+
+p1_trend_add_log <- ggplot(data = datos_trend, aes(x = fecha)) +
+  theme_bw() +
+  geom_line(aes(y = trend_add_log)) +
+  labs(x = '',
+       y = expression(paste('log(', S[t], ')')))
+p1_trend_add_log
 
 # Box plot
-prom_trim_orig <- summarise(group_by(datos, mes), prom = mean(pib))
-prom_trim_log <- summarise(group_by(datos, mes), prom = mean(log_pib))
+prom_trim_orig <- summarise(group_by(datos, mes), prom = mean(ivand))
+prom_trim_log <- summarise(group_by(datos, mes), prom = mean(log_ivand))
 
 trimestres <- c('T1', 'T2', 'T3', 'T4')
 
-
-p1_boxplot_mes_orig <- ggplot(data = datos) +
+p1_boxplot_trim_orig <- ggplot(data = datos) +
   theme_bw() +
-  geom_boxplot(aes(x = mes, y = pib)) +
+  geom_boxplot(aes(x = mes, y = ivand)) +
   geom_line(data = prom_trim_orig, aes(x = 1:4, y = prom),
             size = 0.2, colour = 'red', linetype = 6) +
   scale_x_discrete(labels = trimestres) +
-  labs(x = '', y = 'PIB [1000\'s mill pesos]') +
+  labs(x = '', y = 'IVA no desc [1000\'s mill pesos]') +
   theme(
     axis.line = element_blank(),
     #panel.border = element_blank(),
@@ -212,61 +244,114 @@ p1_boxplot_mes_orig <- ggplot(data = datos) +
   ) +
   scale_y_continuous(labels = dollar)
 
-p1_boxplot_mes_orig
+p1_boxplot_trim_orig
 
-p1_boxplot_mes_log <- ggplot(data = datos) +
+p1_boxplot_trim_log <- ggplot(data = datos) +
   theme_bw() +
-  geom_boxplot(aes(x = mes, y = log_pib)) +
-  geom_line(data = prom_mes_log, aes(x = 1:4, y = prom),
+  geom_boxplot(aes(x = mes, y = log_ivand)) +
+  geom_line(data = prom_trim_log, aes(x = 1:4, y = prom),
             size = 0.2, colour = 'red', linetype = 6) +
   scale_x_discrete(labels = trimestres) +
-  labs(x = '', y = 'log(PIB [1000\'s mill pesos])') +
+  labs(x = '', y = 'log(IVA no desc [1000\'s mill pesos])') +
   theme(
     axis.line = element_blank(),
     #panel.border = element_blank(),
     axis.ticks = element_blank()
   )
 
-p1_boxplot_mes_log
+p1_boxplot_trim_log
 
 # Periodogramas
-diff_pib <- diff(datos$pib)
-diff_log_pib <- diff(datos$log_pib)
+diff_ivand <- diff(datos$ivand)
+diff_log_ivand <- diff(datos$log_ivand)
 
-nro_datos_dif <- length(diff_pib)
+nro_datos_dif <- length(diff_ivand)
 
-period_pib <- abs(fft(diff_pib) / sqrt(nro_datos_dif))^2
-period_log_pib <- abs(fft(diff_log_pib) / sqrt(nro_datos_dif))^2
+period_ivand <- abs(fft(diff_ivand) / sqrt(nro_datos_dif))^2
+period_log_ivand <- abs(fft(diff_log_ivand) / sqrt(nro_datos_dif))^2
 
-period_pib_scale <- period_pib * (4/nro_datos_dif)
-period_log_pib_scale <- period_log_pib * (4/nro_datos_dif)
+period_ivand_scale <- period_ivand * (4/nro_datos_dif)
+period_log_ivand_scale <- period_log_ivand * (4/nro_datos_dif)
 
 freq <- (0:(nro_datos_dif - 1)) / nro_datos_dif
-plot(freq, period_pib_scale, type = 'l')
-plot(freq, period_log_pib_scale, type = 'l')
+plot(freq, period_ivand_scale, type = 'l')
+plot(freq, period_log_ivand_scale, type = 'l')
 
 periodogramas <- data.frame(freq,
-                            pib = period_pib_scale,
-                            log_pib = period_log_pib_scale)
+                            ivand = period_ivand_scale,
+                            log_ivand = period_log_ivand_scale)
 
-p1_periodograma_pib <- ggplot(data = periodogramas) + theme_bw() +
-  geom_line(aes(x = freq, y = pib)) +
+p1_periodograma_ivand <- ggplot(data = periodogramas) +
+  theme_bw() +
+  geom_line(aes(x = freq, y = ivand)) +
   geom_vline(xintercept = (1:3)/4, linetype = 2, colour = 'red') +
-  labs(y = 'Periodograma', x = 'Frecuencia') +
-  scale_x_continuous(limits = c(0, 0.5))
+  labs(y = 'Periodograma', x = 'Frecuencia')
 
-p1_periodograma_pib
+p1_periodograma_ivand
 
-p1_periodograma_log_pib <- ggplot(data = periodogramas) + theme_bw() +
-  geom_line(aes(x = freq, y = log_pib)) +
+p1_periodograma_log_ivand <- ggplot(data = periodogramas) +
+  theme_bw() +
+  geom_line(aes(x = freq, y = log_ivand)) +
   geom_vline(xintercept = (1:3)/4, linetype = 2, colour = 'red') +
-  labs(y = 'Periodograma', x = 'Frecuencia') +
-  scale_x_continuous(limits = c(0, 0.5))
+  labs(y = 'Periodograma', x = 'Frecuencia')
 
-p1_periodograma_log_pib
+p1_periodograma_log_ivand
+
+grid.arrange(p1_trend_mult, p1_trend_add_log,
+             p1_boxplot_trim_log, p1_periodograma_log_ivand,
+             nrow = 2, ncol = 2)
+
+## 2. Postulación de modelos ---------------------------------------------------
 
 
 ## 3. Ajuste de modelos con validación cruzada ---------------------------------
+t_ajuste <- 1:(nro_datos - 4) # dejamos los últimos 4 trimestres por fuera
+datos_ajuste <- datos[t_ajuste, ]
+datos_ajuste$t <- t_ajuste
+
+# modelo 1: logarítmico-cúbico
+mod1 <- lm(log_ivand ~ t + I(t^2) + tri, data = datos_ajuste)
+summary(mod1)
+xtable(summary(mod1))
+
+resid_mod1 <- resid(mod1)
+sigma_mod1 <- summary(mod1)$sigma
+datos_ajuste$resid_mod1 <- resid_mod1
+aju_mod1 <- fitted(mod1)
+datos_ajuste$aju_mod1 <- aju_mod1
+resid_mod1_esc_orig <- datos_ajuste$ivand - exp(aju_mod1) * exp(.5*sigma_mod1^2)
+
+exp(C_p(resid_mod1_esc_orig, type = 'AIC', p = 6))
+exp(C_p(resid_mod1_esc_orig, type = 'BIC', p = 6))
+
+# modelo 2: exponencial-cúbico
+val_ini <- coef(mod1)
+
+I2 <- ifelse(datos_ajuste$tri == 'T2', 1, 0)
+I3 <- ifelse(datos_ajuste$tri == 'T3', 1, 0)
+I4 <- ifelse(datos_ajuste$tri == 'T4', 1, 0)
+
+
+mod2 <- nls(ivand ~ exp(b0 + b1*t + b2*I(t^2) + d2*I2 + d3*I3 + d4*I4),
+            start = list(b0 = val_ini[1], b1 = val_ini[2], b2 = val_ini[3],
+                         d2 = val_ini[4], d3 = val_ini[5], d4 = val_ini[6]),
+            data = datos_ajuste)
+summary(mod2)
+
+resid_mod2 <- resid(mod2)
+datos_ajuste$resid_mod2 <- resid_mod2
+datos_ajuste$aju_mod2 <- fitted(mod2)
+exp(C_p(resid_mod2, type = 'AIC', p = 6))
+exp(C_p(resid_mod2, type = 'BIC', p = 6))
+
+
+# modelo 3: Holt-Winters Multiplicativo
+
+
+# modelo 4: LOESS transformado Yt / St_descomp
+St <- ts_desc_orig$seasonal[1:4]
+datos_ajuste$St <- rep(St, nro_datos - 4)[1:(nro_datos - 4)]
+Yt_desc <- datos_ajuste$ivand / datos_ajuste$St
 
 
 ## 4. Análisis de residuales y validación de supuestos -------------------------
