@@ -119,37 +119,50 @@ Grado polinomio local & 2 (cuadrático)\\
 \end{tabular}
 \end{table}
 
-% resumen modelo lieneal log-cuadrático
+% pronósticos modelo 1 sin trimestres 2 y 3
 \begin{table}[ht]
 \centering
 \begin{tabular}{lrrrr}
-
- Parámetro & Estimado & Error Estd. & Valor t & Pr($t_{335}>$$|$t$|$) \\ 
-  \hline
-$\beta_0$ & -0.4016 & 0.0342 & -11.73 & $<$2$\times10^{-16}$ \\ 
-  $\beta_1$ & -0.0104 & 0.0005 & -22.21 & $<$2$\times10^{-16}$ \\ 
-  $\beta_2$ & 4.202$\times10^{-5}$ & 1.332$\times10^{-6}$ & 31.54 & $<$2$\times10^{-16}$ \\ 
-   \hline
-   $\sqrt{MSE}=0.2086$\\
-   \hline
+\hline
+Periodo & L & Pronóstico & Límite inferior & Límite superior \\
+\hline
+2014 T4 & 1 & 11223.58 & 9972.457 & 12631.68 \\
+2015 T1 & 2 & 10210.27 & 9089.748 & 11468.92 \\
+2015 T2 & 3 & 10358.17 & 9208.104 & 11651.88 \\
+2015 T3 & 4 & 10502.24 & 9321.256 & 11832.85 \\
+\hline
 \end{tabular}
 \end{table}
 
-% resumen modelo lineal exponencial
+% pronósticos modelo 2 sin trimestres 2 y 3
 \begin{table}[ht]
 \centering
-\begin{tabular}{lrrrr}
-
- Parámetro & Estimado & Error Estd. & Valor t & Pr($t_{335}>$$|$t$|$) \\ 
-  \hline
-$\beta_0$ & -0.4901 & 0.0604 & -8.109 & 9.74$\times10^{-15}$ \\ 
-  $\beta_1$ & -0.0075 & 0.0007 & -10.623 & $<$2$\times10^{-16}$ \\ 
-  $\beta_2$ & 3.331$\times10^{-5}$ & 1.790$\times10^{-6}$ & 18.608 & $<$2$\times10^{-16}$ \\ 
-   \hline
-   $\sqrt{MSE}=0.2052$\\
-   \hline
+\begin{tabular}{lrr}
+\hline
+Periodo & L & Pronóstico \\
+\hline
+2014 T4 & 1 & 11146.55 \\
+2015 T1 & 2 & 10225.10 \\
+2015 T2 & 3 & 10375.05 \\
+2015 T3 & 4 & 10521.36 \\
+\hline
 \end{tabular}
 \end{table}
 
+% medidas d eprecisión modelos 1 y 2 sin trimestre 2 y 3
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrr}
+\hline
+Medida & Modelo 1 & Modelo 2 \\
+\hline
+ME & 75.684 & 82.232 \\
+RMSE & 397.453 & 381.694 \\
+MAE & 386.062 & 362.537 \\
+MPE & 0.631 & 0.686 \\
+MAPE & 3.632 & 3.420 \\
+\hline
+\end{tabular}
+\end{table}
 
 \end{document}

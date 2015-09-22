@@ -453,5 +453,59 @@ grid.arrange(p4.3_mod2, blankPlot, p4.1_mod2, p4.2_mod2, nrow = 2, ncol = 2)
 
 ## 5. Pronósticos para validación cruzada --------------------------------------
 
+# pronósticos modelo 1 sin trimestre 2 y 3
+nro_datos_aju <- nrow(datos_ajuste)
+t_pron <- (nro_datos_aju + 1):nro_datos
+I4_pron <- c(1, 0, 0, 0)
+pred_mod1_sin23trim <- predict(mod1_sin23trim,
+                               newdata = data.frame(t = t_pron, I4 = I4_pron),
+                               interval = 'prediction', level = 0.95)
+
+pred_mod1_sin23trim_esc_orig <-
+  exp(pred_mod1_sin23trim) * exp(0.5*sigma_mod1_sin23trim^2)
+
+datos$pron_p_mod1 <- c(rep(NA, nro_datos_aju),
+                       pred_mod1_sin23trim_esc_orig[, 1])
+
+datos$pron_ici_mod1 <- c(rep(NA, nro_datos_aju),
+                       pred_mod1_sin23trim_esc_orig[, 2])
+
+datos$pron_ics_mod1 <- c(rep(NA, nro_datos_aju),
+                         pred_mod1_sin23trim_esc_orig[, 3])
+
+p5_pron_mod1 <- ggplot(data = datos, aes(x = fecha)) + theme_bw() +
+  geom_line(aes(y = ivand, colour = 'Real')) +
+  geom_line(aes(y = pron_p_mod1, colour = 'Pronóstico'), linetype = 2) +
+  geom_line(aes(y = pron_ici_mod1), linetype = 3) +
+  geom_line(aes(y = pron_ics_mod1), linetype = 3) +
+  scale_colour_manual("",
+                      values = c('Real' = 'black', 'Pronóstico' = 'red')) +
+  theme(legend.position = c(0.15, 0.85), legend.background = element_blank()) +
+  labs(x = 'Tiempo',
+       y = 'IVA [1000\'s mill de pesos]') + ylim(2000, 13000)
+p5_pron_mod1
+
+accuracy(datos$pron_p_mod1[t_pron], datos$ivand[t_pron])
+
+# pronósticos modelo 2 sin trimestre 2 y 3
+pred_mod2_sin23trim <- predict(mod2_sin23trim,
+                               newdata = data.frame(t = t_pron, I4 = I4_pron),
+                               interval = 'prediction', level = 0.95)
+
+datos$pron_p_mod2 <- c(rep(NA, nro_datos_aju), pred_mod2_sin23trim)
+
+p5_pron_mod2 <- ggplot(data = datos, aes(x = fecha)) + theme_bw() +
+  geom_line(aes(y = ivand, colour = 'Real')) +
+  geom_line(aes(y = pron_p_mod2, colour = 'Pronóstico'), linetype = 2) +
+  scale_colour_manual("",
+                      values = c('Real' = 'black', 'Pronóstico' = 'red')) +
+  theme(legend.position = c(0.15, 0.85), legend.background = element_blank()) +
+  labs(x = 'Tiempo',
+       y = 'IVA [1000\'s mill de pesos]') + ylim(2000, 13000)
+p5_pron_mod2
+
+accuracy(datos$pron_p_mod2[t_pron], datos$ivand[t_pron])
+
+grid.arrange(p5_pron_mod1, p5_pron_mod2, nrow = 1, ncol = 2)
 
 ## 6. Selección del mejor modelo -----------------------------------------------
