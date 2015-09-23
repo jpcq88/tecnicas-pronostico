@@ -508,4 +508,88 @@ accuracy(datos$pron_p_mod2[t_pron], datos$ivand[t_pron])
 
 grid.arrange(p5_pron_mod1, p5_pron_mod2, nrow = 1, ncol = 2)
 
-## 6. Selección del mejor modelo -----------------------------------------------
+## 6. Selección del mejor modelo global, pronóstico ex-ante y estabilidad ------
+datos$I2 <- ifelse(datos$tri == 'T2', 1, 0)
+datos$I3 <- ifelse(datos$tri == 'T3', 1, 0)
+datos$I4 <- ifelse(datos$tri == 'T4', 1, 0)
+datos$t <- 1:nro_datos
+
+mod1_full <- lm(log_ivand ~ t + I(t^2) + I4, data = datos)
+summary(mod1_full)
+qt(0.025, 55) # valor crítico de t
+
+sigma_mod1_full <- summary(mod1_full)$sigma
+datos$resid_mod1_full <- resid(mod1_full)
+datos$aju_mod1_full <- fitted(mod1_full)
+datos$aju_mod1_esc_orig_full <- 
+  exp(datos$aju_mod1_full) * exp(0.5*sigma_mod1_full^2)
+
+exp(coef(mod1_full)) * exp(0.5*sigma_mod1_full^2)
+resid_mod1_esc_orig_full <- 
+  datos$ivand - datos$aju_mod1_esc_orig_full
+exp(C_p(resid_mod1_esc_orig_full, type = 'AIC', p = 6))
+exp(C_p(resid_mod1_esc_orig_full, type = 'BIC', p = 6))
+
+val_ini_full <- coef(mod1_full)
+
+mod2_full <- nls(ivand ~ exp(b0 + b1*t + b2*I(t^2) + d4*I4),
+                      start = list(b0 = val_ini_full[1], b1 = val_ini_full[2],
+                                   b2 = val_ini_full[3], d4 = val_ini_full[4]),
+                      data = datos)
+summary(mod2_full)
+
+resid_mod2_full <- resid(mod2_full)
+datos$resid_mod2_full <- resid_mod2_full
+datos$aju_mod2_full <- fitted(mod2_full)
+exp(C_p(resid_mod2_full, type = 'AIC', p = 6))
+exp(C_p(resid_mod2_full, type = 'BIC', p = 6))
+
+
+p7_base <- ggplot(data = datos, aes(x = fecha)) + theme_bw()
+
+p7.1_mod1 <- p7_base + geom_line(aes(y = resid_mod1_full)) +
+  labs(x = 'Tiempo',
+       y  = 'Residuales')
+p7.1_mod1
+
+p7.2_mod1 <- p7_base + geom_point(aes(x = aju_mod1_full,
+                                      y = resid_mod1_full)) +
+  labs(x = 'Ajustados',
+       y = 'Residuales')
+p7.2_mod1
+
+p7.3_mod1 <- p7_base + geom_line(aes(y = ivand, colour = 'Real')) + 
+  geom_line(aes(y = aju_mod1_esc_orig_full, colour = 'Ajuste')) +
+  labs(x = 'Tiempo',
+       y = 'IVA [1000\'s mill de pesos]') +
+  scale_colour_manual("",
+                      values = c('Real'='black', 'Ajuste'='red')) +
+  theme(legend.position = c(0.15, 0.85), legend.background = element_blank())
+p7.3_mod1
+
+grid.arrange(p7.3_mod1, blankPlot, p7.1_mod1, p7.2_mod1, nrow = 2, ncol = 2)
+
+# análisis residuales modelo 2 sin trimestres 2 y 3
+
+p7.1_mod2 <- p7_base + geom_line(aes(y = resid_mod2_full)) +
+  labs(x = 'Tiempo',
+       y  = 'Residuales')
+p7.1_mod2
+
+p7.2_mod2 <- p7_base + geom_point(aes(x = aju_mod2_full,
+                                      y = resid_mod2_full)) +
+  labs(x = 'Ajustados',
+       y = 'Residuales')
+p7.2_mod2
+
+p7.3_mod2 <- p7_base + geom_line(aes(y = ivand, colour = 'Real')) + 
+  geom_line(aes(y = aju_mod2_full, colour = 'Ajuste')) +
+  labs(x = 'Tiempo',
+       y = 'IVA [1000\'s mill de pesos]') +
+  scale_colour_manual("",
+                      values = c('Real'='black', 'Ajuste'='red')) +
+  theme(legend.position = c(0.15, 0.85), legend.background = element_blank())
+p7.3_mod2
+
+grid.arrange(p7.3_mod2, blankPlot, p7.1_mod2, p7.2_mod2, nrow = 2, ncol = 2)
+
