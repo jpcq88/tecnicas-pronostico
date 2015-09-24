@@ -593,3 +593,49 @@ p7.3_mod2
 
 grid.arrange(p7.3_mod2, blankPlot, p7.1_mod2, p7.2_mod2, nrow = 2, ncol = 2)
 
+
+
+pron_mod1_full <- predict(mod1_full,
+                          data.frame(t = (nro_datos + 1):(nro_datos + 4),
+                                     I4 = c(1, 0, 0, 0)),
+                          interval = 'prediction', level = 0.95)
+pron_mod1_full_esc_orig <- 
+  exp(pron_mod1_full) * exp(0.5*sigma_mod1_full^2)
+pron_mod1_full_esc_orig
+
+pron_mod2_full <- predict(mod2_full,
+                          data.frame(t = (nro_datos + 1):(nro_datos + 4),
+                                     I4 = c(1, 0, 0, 0)),
+                          interval = 'prediction', level = 0.95)
+pron_mod2_full
+
+S_est <- 4
+npar_mod1 <- length(coef(mod1_sin23trim))
+k_ini <- max((npar_mod1 + 1), 2 * S_est)
+obs_mod_i <- k_ini:nro_datos_aju
+nro_mod_ajustados <- length(obs_mod_i)
+mtrx_coef <- matrix(data = NA, nrow = nro_mod_ajustados, ncol = npar_mod1*3 + 1)
+for (i in obs_mod_i) {
+  mod_tmp <- lm(log_ivand ~ t + I(t^2) + I4,
+                data = datos_ajuste[1:i, ])
+  sum_tmp <- summary(mod_tmp)
+  coef_tmp <- coef(mod_tmp)
+  t_val <- qt(0.025, i - npar_mod1)
+  lic <- coef_tmp - t_val * sum_tmp$coefficients[, 2]
+  lsc <- coef_tmp + t_val * sum_tmp$coefficients[, 2]
+  idx_coef <- seq(2, ncol(mtrx_coef), 3)
+  idx_lic <- seq(3, ncol(mtrx_coef), 3)
+  idx_lsc <- seq(4, ncol(mtrx_coef), 3)
+  mtrx_coef[i - k_ini + 1, 1] <- i
+  mtrx_coef[i - k_ini + 1, idx_coef] <- coef_tmp
+  mtrx_coef[i - k_ini + 1, idx_lic] <- lic
+  mtrx_coef[i - k_ini + 1, idx_lsc] <- lsc
+}
+
+mtrx_coef
+
+plot(mtrx_coef[,2], type = 'l')
+abline(h = coef(mod1_sin23trim)[1], lty = 2)
+plot(mtrx_coef[,5], type = 'l')
+plot(mtrx_coef[,8], type = 'l')
+plot(mtrx_coef[,11], type = 'l')
