@@ -13,56 +13,98 @@ library(dplyr) # manipulación de datos
 library(xtable) # exportar tablas en formato LaTeX
 library(scales) # formatear los valores de los ejes de las gráficas.
 library(forecast) # funciones de pronóstico para series de tiempo y mod lineales
+library(strucchange) # análisis de estabilidad
 # theme_set(theme_bw(base_size = 7)) # definir tamaño de fuente gráficos ggplot2
 
 ## Funciones auxiliares --------------------------------------------------------
-ggqqplot <- function(mod, resid.type = 'student'){
-  # Devuelve un gráfico qqplot al estilo ggplot2
+calc_coef_recursivos <- function(modelo, k.ini = length(coef(modelo)) + 1) {
+  # calcula los coeficientes del modelo recursivamente
   
-  if (resid.type == 'student'){
-    res_std <- rstudent(mod)
-  } else if (resid.type == 'regular'){
-    # cuando el modelo ajustado es no lineal (función nls())
-    res_std <- resid(mod) / sd(resid(mod))
+  if (is(modelo, 'lm')) {
+    
+    npar_mod <- length(coef(modelo))
+    nro_datos <- nrow(modelo$model)
+    nro_obs_mod_i <- k.ini:nro_datos
+    
+    # La matriz para almacenar los valores de los coeficientes tiene en la
+    # primera columna el número de observaciones usadas. En las siguientes
+    # se almacenan los valores de los coeficientes con sus interv de conf
+    mtrx_coef <- matrix(data = NA,
+                        nrow = length(nro_obs_mod_i),
+                        ncol = npar_mod * 3 + 1)
+    
+    idx_coef <- seq(2, ncol(mtrx_coef), 3)
+    idx_lic <- seq(3, ncol(mtrx_coef), 3)
+    idx_lsc <- seq(4, ncol(mtrx_coef), 3)
+    
+    colnames(mtrx_coef) <- paste('col', 1:ncol(mtrx_coef), sep = '.')
+    colnames(mtrx_coef)[1] <- 'k'
+    colnames(mtrx_coef)[idx_coef] <- names(coef(modelo))
+    colnames(mtrx_coef)[idx_lic] <- paste(names(coef(modelo)), 'lic', sep = '.')
+    colnames(mtrx_coef)[idx_lsc] <- paste(names(coef(modelo)), 'lsc', sep = '.')
+    
+    for (i in nro_obs_mod_i) {
+      mod_tmp <- lm(formula(modelo),
+                    data = modelo$model[1:i, ])
+      sum_tmp <- summary(mod_tmp)
+      coef_tmp <- coef(mod_tmp)
+      t_0 <- qt(0.025, mod_tmp$df.residual)
+      lic <- coef_tmp - t_0 * sum_tmp$coefficients[, 2]
+      lsc <- coef_tmp + t_0 * sum_tmp$coefficients[, 2]
+      mtrx_coef[i - k_ini + 1, 1] <- i
+      mtrx_coef[i - k_ini + 1, idx_coef] <- coef_tmp
+      mtrx_coef[i - k_ini + 1, idx_lic] <- lic
+      mtrx_coef[i - k_ini + 1, idx_lsc] <- lsc
+    }
+    
+  } else if (is(modelo, 'nls')) {
+    
+    datos_tmp <- eval(modelo$data)
+    npar_mod <- length(coef(modelo))
+    nro_datos <- nrow(datos_tmp)
+    nro_obs_mod_i <- k.ini:nro_datos
+    
+    # La matriz para almacenar los valores de los coeficientes tiene en la
+    # primera columna el número de observaciones usadas. En las siguientes
+    # se almacenan los valores de los coeficientes con sus interv de conf
+    mtrx_coef <- matrix(data = NA,
+                        nrow = length(nro_obs_mod_i),
+                        ncol = npar_mod * 3 + 1)
+    
+    idx_coef <- seq(2, ncol(mtrx_coef), 3)
+    idx_lic <- seq(3, ncol(mtrx_coef), 3)
+    idx_lsc <- seq(4, ncol(mtrx_coef), 3)
+    
+    colnames(mtrx_coef) <- paste('col', 1:ncol(mtrx_coef), sep = '.')
+    colnames(mtrx_coef)[1] <- 'k'
+    colnames(mtrx_coef)[idx_coef] <- names(coef(modelo))
+    colnames(mtrx_coef)[idx_lic] <- paste(names(coef(modelo)), 'lic', sep = '.')
+    colnames(mtrx_coef)[idx_lsc] <- paste(names(coef(modelo)), 'lsc', sep = '.')
+    
+    # lista de valores iniciales para modelo nls
+    coef_aux_ini <- as.list(coef(modelo))
+    
+    for (i in nro_obs_mod_i) {
+      mod_tmp <- nls(formula(modelo), start = coef_aux_ini,
+                     data = datos_tmp[1:i, ])
+      sum_tmp <- summary(mod_tmp)
+      coef_tmp <- coef(mod_tmp)
+      t_0 <- qt(0.025, sum_tmp$df[2])
+      lic <- coef_tmp - t_0 * sum_tmp$coefficients[, 2]
+      lsc <- coef_tmp + t_0 * sum_tmp$coefficients[, 2]
+      mtrx_coef[i - k_ini + 1, 1] <- i
+      mtrx_coef[i - k_ini + 1, idx_coef] <- coef_tmp
+      mtrx_coef[i - k_ini + 1, idx_lic] <- lic
+      mtrx_coef[i - k_ini + 1, idx_lsc] <- lsc
+      
+      coef_aux_ini <- as.list(coef(mod_tmp)) # valores iniciales próxima iter
+    }
+    
+  } else {
+    return('ERROR: Objeto no válido.')
   }
   
-  val_aju <- fitted(mod)
-  
-  # Almacenar los datos en un data frame para poder usar ggplot
-  dat_tmp <- data.frame(res_std, val_aju)
-  
-  qq_val <- qqnorm(res_std, plot.it = FALSE)
-  dat_tmp$q_teo <- qq_val$x # añadir cuantiles teóricos al data frame
-  dat_tmp$q_muestra <- qq_val$y # añadir cuantiles muestrales al data frame
-  
-  slope_qq <- diff(quantile(res_std, c(0.25, 0.75), type = 7)) /
-    diff(qnorm(c(0.25, 0.75)))
-  
-  inter_qq <- quantile(res_std, c(0.25, 0.75), type = 7)[1L] -
-    slope_qq * qnorm(c(0.25, 0.75))[1L]
-  
-  # pruebas de normalidad Shapiro-Wilk y Kolmogorov-Smirnov
-  sw_vp <- shapiro.test(res_std)$p.value
-  ks_vp <- ks.test(res_std, 'pnorm')$p.value
-  
-  pruebas_norm <- paste('Prueba  p-valor\n',
-                        'SW        ', round(sw_vp, 4), '\n',
-                        'KS         ', round(ks_vp, 4), sep = '')
-  
-  ub_y <- max(dat_tmp$q_muestra) - 0.2 # ubicación de los p-valores
-  ub_x <- min(dat_tmp$q_teo)
-  
-  # qqplot con ggplot
-  ggplot(data = dat_tmp, aes(x = q_teo, y = q_muestra)) + theme_bw(8) +
-    geom_point(size = 1) +
-    geom_abline(intercept = inter_qq, y = slope_qq, colour = 'red') +
-    labs(x = 'Cuantiles Teóricos', y = 'Cuantiles Muestrales',
-         title = 'QQ-Plot') +
-    annotate('text', x = ub_x, y = ub_y, size = 2, parse = FALSE,
-             label = pruebas_norm, hjust = 0) +
-    theme(plot.margin = unit(c(0.1,0.1,0,0), "lines"),
-          panel.border = element_blank(),
-          axis.ticks = element_blank())
+  return(mtrx_coef)
 }
 
 C_p <- function(residuales, type = 'AIC', p = 1){
@@ -593,8 +635,6 @@ p7.3_mod2
 
 grid.arrange(p7.3_mod2, blankPlot, p7.1_mod2, p7.2_mod2, nrow = 2, ncol = 2)
 
-
-
 pron_mod1_full <- predict(mod1_full,
                           data.frame(t = (nro_datos + 1):(nro_datos + 4),
                                      I4 = c(1, 0, 0, 0)),
@@ -615,12 +655,14 @@ k_ini <- max((npar_mod1 + 1), 2 * S_est)
 obs_mod_i <- k_ini:nro_datos_aju
 nro_mod_ajustados <- length(obs_mod_i)
 mtrx_coef <- matrix(data = NA, nrow = nro_mod_ajustados, ncol = npar_mod1*3 + 1)
+resid_recur_mod1 <- vector(mode = "numeric", length = nro_mod_ajustados - 1)
 for (i in obs_mod_i) {
   mod_tmp <- lm(log_ivand ~ t + I(t^2) + I4,
                 data = datos_ajuste[1:i, ])
   sum_tmp <- summary(mod_tmp)
+  sigma_mod_tmp <- sum_tmp$sigma
   coef_tmp <- coef(mod_tmp)
-  t_val <- qt(0.025, i - npar_mod1)
+  t_val <- qt(0.025, mod_tmp$df.residual)
   lic <- coef_tmp - t_val * sum_tmp$coefficients[, 2]
   lsc <- coef_tmp + t_val * sum_tmp$coefficients[, 2]
   idx_coef <- seq(2, ncol(mtrx_coef), 3)
@@ -630,12 +672,114 @@ for (i in obs_mod_i) {
   mtrx_coef[i - k_ini + 1, idx_coef] <- coef_tmp
   mtrx_coef[i - k_ini + 1, idx_lic] <- lic
   mtrx_coef[i - k_ini + 1, idx_lsc] <- lsc
+  
+  if (i < nro_datos_aju) {
+    I4_tmp <- 1 * !((i + 1) %% S_est)
+    pron_tmp <- predict(mod_tmp,
+                        newdata = data.frame(t = i + 1, I4 = I4_tmp),
+                        se.fit = TRUE)
+    resid_recur_mod1[i - k_ini + 1] <-
+      (pron_tmp$fit - datos_ajuste$log_ivand[i + 1]) / (pron_tmp$se.fit*sqrt(i))
+  }
 }
 
 mtrx_coef
+resid_recur_mod1
+recresid(mod1_sin23trim, start = 8)
 
 plot(mtrx_coef[,2], type = 'l')
 abline(h = coef(mod1_sin23trim)[1], lty = 2)
 plot(mtrx_coef[,5], type = 'l')
 plot(mtrx_coef[,8], type = 'l')
 plot(mtrx_coef[,11], type = 'l')
+
+coef_rec_mod1 <- calc_coef_recursivos(mod1_sin23trim, 8)
+coef_rec_mod1
+colnames(coef_rec_mod1) <- c('k', 'b0', 'b0.lic', 'b0.lsc', 'b1', 'b1.lic',
+                             'b1.lsc', 'b2', 'b2.lic', 'b2.lsc', 'd4',
+                             'd4.lic', 'd4.lsc')
+coef_rec_mod2 <- calc_coef_recursivos(mod2_sin23trim, 8)
+coef_rec_mod2
+
+p7_mod1_base <- ggplot(data = as.data.frame(coef_rec_mod1), aes(x = k)) +
+  theme_bw()
+
+p7_mod1_b0 <- p7_mod1_base + geom_line(aes(y = b0)) +
+  geom_line(aes(y = b0.lic), linetype = 2) +
+  geom_line(aes(y = b0.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod1_sin23trim)[1], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(beta)[0]))
+p7_mod1_b0
+
+p7_mod1_b1 <- p7_mod1_base + geom_line(aes(y = b1)) +
+  geom_line(aes(y = b1.lic), linetype = 2) +
+  geom_line(aes(y = b1.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod1_sin23trim)[2], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(beta)[1]))
+p7_mod1_b1
+
+p7_mod1_b2 <- p7_mod1_base + geom_line(aes(y = b2)) +
+  geom_line(aes(y = b2.lic), linetype = 2) +
+  geom_line(aes(y = b2.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod1_sin23trim)[3], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(beta)[2]))
+p7_mod1_b2
+
+p7_mod1_d4 <- p7_mod1_base + geom_line(aes(y = d4)) +
+  geom_line(aes(y = d4.lic), linetype = 2) +
+  geom_line(aes(y = d4.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod1_sin23trim)[4], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(delta)[4]))
+p7_mod1_d4
+
+grid.arrange(p7_mod1_b0, p7_mod1_b1, p7_mod1_b2, p7_mod1_d4,
+             ncol = 2, nrow = 2)
+
+sctest(formula(mod1_sin23trim), data = datos_ajuste, type = 'Rec-CUSUM')
+plot(efp(formula(mod1_sin23trim), type="Rec-CUSUM", data = datos_ajuste),
+     alpha = 0.05)
+
+p7_mod2_base <- ggplot(data = as.data.frame(coef_rec_mod2), aes(x = k)) +
+  theme_bw()
+
+p7_mod2_b0 <- p7_mod2_base + geom_line(aes(y = b0)) +
+  geom_line(aes(y = b0.lic), linetype = 2) +
+  geom_line(aes(y = b0.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod2_sin23trim)[1], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(beta)[0]))
+p7_mod2_b0
+
+p7_mod2_b1 <- p7_mod2_base + geom_line(aes(y = b1)) +
+  geom_line(aes(y = b1.lic), linetype = 2) +
+  geom_line(aes(y = b1.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod2_sin23trim)[2], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(beta)[1]))
+p7_mod2_b1
+
+p7_mod2_b2 <- p7_mod2_base + geom_line(aes(y = b2)) +
+  geom_line(aes(y = b2.lic), linetype = 2) +
+  geom_line(aes(y = b2.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod2_sin23trim)[3], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(beta)[2]))
+p7_mod2_b2
+
+p7_mod2_d4 <- p7_mod2_base + geom_line(aes(y = d4)) +
+  geom_line(aes(y = d4.lic), linetype = 2) +
+  geom_line(aes(y = d4.lsc), linetype = 2) +
+  geom_hline(yintercept = coef(mod2_sin23trim)[4], colour = 'red') +
+  labs(x = 'n',
+       y = expression(hat(delta)[4]))
+p7_mod2_d4
+
+grid.arrange(p7_mod2_b0, p7_mod2_b1, p7_mod2_b2, p7_mod2_d4,
+             ncol = 2, nrow = 2)
+
+sctest(formula(mod2_sin23trim), data = datos_ajuste, type = 'Rec-CUSUM')
+plot(efp(formula(mod2_sin23trim), type="Rec-CUSUM", data = datos_ajuste), alpha = 0.05)
