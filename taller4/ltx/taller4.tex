@@ -1,0 +1,229 @@
+\documentclass{tufte-handout}
+
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\spanishdecimal{.}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{minted}
+\usepackage{graphicx}
+
+\graphicspath{{../img/}}
+
+\title{Taller 4: Identificación de procesos estacionarios y ruido blanco}
+\author{Juan Pablo Calle Quintero}
+\date{22 de octubre de 2015}
+
+\begin{document}
+\maketitle
+
+%%% Punto 1 ------------------------------------------------------------------
+\section*{Punto 1}
+
+En la Figura~\ref{fig:p1_serie} vemos la serie mensual de ventas de licor en Estados Unidos desde enero de 1967 hasta diciembre de 1994. Son 336 observaciones. De esta gráfica podemos observar que la serie tiene una tendencia creciente clara, es decir $\mu_t \neq \mu$, y además se aprecia que la varianza va en aumento con el tiempo, o sea $\sigma_t^2 \neq \sigma^2$. Además, en la Figura~\ref{fig:p1_acf} vemos las autocorrelaciones muestrales de la serie, donde es claro que el proceso no es ergódico, pues $\lim_{k\to\infty} \rho(k)$ no converge rápidamente hacia cero.
+
+\begin{marginfigure}
+	\includegraphics[scale=1]{p1_serie.pdf}
+	\caption{Serie ventas mensuales de licor en Estados Unidos.}
+	\label{fig:p1_serie}
+\end{marginfigure}
+
+De acuerdo con lo anterior, la serie no cumple con los tres requisitos necesarios para ser estacionaria en covarianza.
+
+También podemos observar en la ACF que los coeficientes de autocorrelación muestrales en  $k=$ 12, 24, 36 y 48 son consistentemente más grandes que los demás, un patrón periódico, lo cuál puede indicar presencia de estacionalidad en la serie, en este caso de periodo $s=$ 12, es decir, mensual.
+
+\begin{marginfigure}[2cm]
+	\includegraphics[scale=1]{p1_acf.pdf}
+	\caption{ACF de la serie mensual ventas de licor en Estados Unidos.}
+	\label{fig:p1_acf}
+\end{marginfigure}
+
+%%% Punto 2 ------------------------------------------------------------------
+\section*{Punto 2}
+
+\textbf{a)} En la Figura~\ref{fig:p2_residuales_mod1} se pueden var los residuales vs el tiempo y los valores ajustados del modelo 1 log-cuadrático estacional.
+
+Por los cambios los cambios bruscos en los valores residuales en los periodos 1980 a 1984, parece que este modelo que no es capaz de capturar los cambios estructurales que tuvo la serie en estos periodos, en estas fechas se está subestimando. Además se aprecia que hasta 1978 aproximadamente los residuales presentan una tendencia negativa consistente, lo cual indica que en este periodo el modelo está sobreestimado persistentemente a la serie real.
+
+También se ven algunas variaciones cíclicas normales en este tipo de series, por lo que posiblemete para algún $k$, $\rho_k \neq 0$, es decir, los residuales no provienen de un ruido blanco. Debido a los ciclos presentes los residuales no cumplen con el supuesto de independencia, por lo cual no es apropiado probar el supuesto de normalidad.
+
+En la gráfica de los residuales vs valores ajustados podemos observar que el supuesto de la varianza constante sí se cumple debido a que no se observa ningún patrón anómalo en la distribución de los residuales.
+
+\begin{figure*}
+	\includegraphics[scale=1]{p2_residuales_mod1.pdf}
+	\caption{Gráficos de residuales modelo 1 log-cuadrático estacional.}
+	\label{fig:p2_residuales_mod1}
+\end{figure*}
+
+\textbf{b)} En la ACF se puede observar que por lo menos hasta $k=$ 12 se rechaza la hipótesis nula $H_0:$ $\rho_k = 0$ vs  $\rho_k \neq 0$. Por lo tanto los residuales del modelo 1 no parecen provenir de un ruido blanco. La ACF sigue un patrón de cola amortiguada de tipo sinusoidal. La PACF no tiene un patrón claro, se podría pensar que a partir de $k=$ 4 hay un patrón de corte, sin embargo siguen apareciendo algunos rezagos significativos para valores de $k$ más adelante. Quizá esto se deba a los ciclos presentes en los residuales y las tendencias temporales en los residuales.
+
+\begin{figure*}
+	\includegraphics[scale=0.9]{p2_correlogramas_mod1.pdf}
+	\caption{Correlogramas de los residuales modelo 1 log-cuadrático estacional.}
+	\label{fig:p2_correlogramas_mod1}
+\end{figure*}
+
+\textbf{c)} Tanto para el test de Box-Pierce como el de Lung-Box la prueba de hipótesis es, que para cada $m$:
+
+$H_0:$ $\rho_1=\rho_2=...=\rho_m=0$ vs.
+
+$H_a:$ $\rho_k \neq 0$ para algún $k=1,2,...,m$
+
+El estadístico de prueba del test Box-Pierce es $Q_{BP}=n \sum_{k=1}^m \hat{\rho}_k^2 \sim \text{ aproximadamente } \chi_m^2$ y el de Lung-Box es $Q_{LB}=n(n+2) \sum_{k=1}^m \hat{\rho}_k^2/(n-k) \sim \text{ aproximadamente } \chi_m^2$. En ambos casos se rechaza $H_0$ si el valor p es pequeño, calculado como $\Pr(\chi_m^2 >Q_{BP})$ y $\Pr(\chi_m^2 >Q_{LB})$.
+
+En las Tablas \ref{tab:p2_bp} y \ref{tab:p2_lb} se observan los resultados de los test de Box-Pierce y de Lung-Box respectivamente para valores de $m=$ 48.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+m & $Q_{BP}$ & gl & Valor p \\ 
+  \hline
+6 & 759.58 & 6 & 0.0000 \\ 
+  12 & 1084.00 & 12 & 0.0000 \\ 
+  18 & 1163.78 & 18 & 0.0000 \\ 
+  24 & 1176.19 & 24 & 0.0000 \\ 
+  30 & 1205.68 & 30 & 0.0000 \\ 
+  36 & 1265.85 & 36 & 0.0000 \\ 
+  42 & 1315.41 & 42 & 0.0000 \\ 
+  48 & 1355.18 & 48 & 0.0000 \\ 
+   \hline
+\end{tabular}
+\caption{Resultados prueba Box-Pierce modelo 1.} 
+\label{tab:p2_bp}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+m & $Q_{LB}$ & gl & Valor p \\ 
+  \hline
+6 & 771.87 & 6 & 0.0000 \\ 
+  12 & 1107.81 & 12 & 0.0000 \\ 
+  18 & 1191.90 & 18 & 0.0000 \\ 
+  24 & 1205.24 & 24 & 0.0000 \\ 
+  30 & 1237.79 & 30 & 0.0000 \\ 
+  36 & 1305.39 & 36 & 0.0000 \\ 
+  42 & 1362.26 & 42 & 0.0000 \\ 
+  48 & 1408.85 & 48 & 0.0000 \\ 
+   \hline
+\end{tabular}
+\caption{Resultados prueba Ljung-Box modelo 1.} 
+\label{tab:p2_lb}
+\end{table}
+
+En ambas pruebas, y para todos los valores de $m$ hay evidencia suficiente para rechazar $H_0$, es decir, por lo menos un $\rho_k \neq 0$ para $k=$ 1,2,...,m. La serie de los residuales no proviene de un ruido blanco.
+
+\textbf{d)} Para el test de Durbin-Watson de orden 1 se plantea la siguiente prueba de hipótesis: 
+
+$H_0:$ $\rho(1)=0$ vs.
+
+$H_a:$ $\rho(1)>0$ (ya que $\hat{\rho}(1)>0$)
+
+El estadístico de prueba es $d_1 = \frac{\sum_{t=2}^n (\hat{E}_t - \hat{E}_{t-1})^2}{\sum_{t=1}^n \hat{E}_t^2}$, si $0<d_1<2$ entonces se rechaza $H_0: \rho(1)=0$ en favor de $H_a: \rho(1)>0$.
+
+En la Tabla~\ref{tab:p2_db} se muestra el resultado dela prueba Durbin-Warson. Como $d_1 < 1$ y $\Pr(DW_1 < d_1)$ muy pequeño, entonces hay evidencia suficiente para rechazar $H_0$, es decir hay autocorrelación positiva por lo menos de orden 1 en los residuales del modelo. No provienen de un ruido blanco.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+lag & $\hat{\rho}(1)$ & $d_1$ & VP $\rho>$0 & VP $\rho<$0 \\ 
+  \hline
+1 & 0.68986 & 0.60553 & 0.00000 & 1.00000 \\ 
+   \hline
+\end{tabular}
+\caption{Resultados prueba de orden 1 Durbin-Watson.} 
+\label{tab:p2_db}
+\end{table}
+
+
+\textbf{e)} Puesto que los residuales no provienen de un ruido blanco, el modelo ajustado no es válido. Posiblemente la presencia de ciclos y cambios estructurales que no se  pueden modelar con la tendencia escogida son los causante de la falta de ajuste del modelo.
+
+\textbf{f)} Si, aunque los resudiales muestran algunas rachas de valores por encima y por debajo del promedio, en general si oscilan al rededor de una media constante, cercana a cero, además a varianza también se puede considerar constante. La ACF además monstró un patrón de cola amortiguada de tipo sinusoidal, que converge rápidamente a cero cuando $k$ tiende a infinito. Es decir, el proceso es ergódico.
+
+
+%%% Punto 3 ------------------------------------------------------------------
+\section*{Punto 3}
+
+\textbf{a)} En la Figura~\ref{fig:p2_residuales_mod2} se pueden var los residuales vs el tiempo y los valores ajustados del modelo 2 exponencial-cuadrático estacional.
+
+Este mudelo posee los mismos problemas que el anterior; no independencia, ciclos y rachas de residuales por debajo y por encima de cero, y además tiene el agravante de que ahora la varianza no es constante, pues muestra un patrón claro de embudo.
+
+\begin{figure*}
+	\includegraphics[scale=1]{p2_residuales_mod2.pdf}
+	\caption{Gráficos de residuales modelo 2 exponencial-cuadrático estacional.}
+	\label{fig:p2_residuales_mod2}
+\end{figure*}
+
+\textbf{b)} En la ACF se puede observar que por lo menos hasta $k=$ 12 se rechaza la hipótesis nula $H_0:$ $\rho_k = 0$ vs  $\rho_k \neq 0$. Por lo tanto los residuales del modelo 2 no parecen provenir de un ruido blanco. La ACF sigue un patrón de cola amortiguada de tipo sinusoidal, como el modelo anterior. La PACF tampoco tienen un patrón claro, pero lo más probable es que tengan un patron de corte a partir de $k=$ 4.
+
+\begin{figure*}
+	\includegraphics[scale=0.9]{p2_correlogramas_mod2.pdf}
+	\caption{Correlogramas de los residuales modelo 2 exponencial-cuadrático estacional.}
+	\label{fig:p2_correlogramas_mod2}
+\end{figure*}
+
+\textbf{c)} Tanto para el test de Box-Pierce como el de Lung-Box la prueba de hipótesis es, que para cada $m$:
+
+$H_0:$ $\rho_1=\rho_2=...=\rho_m=0$ vs.
+
+$H_a:$ $\rho_k \neq 0$ para algún $k=1,2,...,m$
+
+El estadístico de prueba del test Box-Pierce es $Q_{BP}=n \sum_{k=1}^m \hat{\rho}_k^2 \sim \text{ aproximadamente } \chi_m^2$ y el de Lung-Box es $Q_{LB}=n(n+2) \sum_{k=1}^m \hat{\rho}_k^2/(n-k) \sim \text{ aproximadamente } \chi_m^2$. En ambos casos se rechaza $H_0$ si el valor p es pequeño, calculado como $\Pr(\chi_m^2 >Q_{BP})$ y $\Pr(\chi_m^2 >Q_{LB})$.
+
+En las Tablas \ref{tab:p3_bp} y \ref{tab:p3_lb} se observan los resultados de los test de Box-Pierce y de Lung-Box respectivamente para valores de $m=$ 48.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+m & $Q_{BP}$ & gl & Valor p \\ 
+  \hline
+6 & 786.05 & 6 & 0.0000 \\ 
+  12 & 1063.24 & 12 & 0.0000 \\ 
+  18 & 1119.19 & 18 & 0.0000 \\ 
+  24 & 1124.42 & 24 & 0.0000 \\ 
+  30 & 1188.29 & 30 & 0.0000 \\ 
+  36 & 1309.02 & 36 & 0.0000 \\ 
+  42 & 1402.47 & 42 & 0.0000 \\ 
+  48 & 1464.98 & 48 & 0.0000 \\ 
+   \hline
+\end{tabular}
+\caption{Resultados prueba Box-Pierce Modelo 2.} 
+\label{tab:p3_bp}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrr}
+  \hline
+m & $Q_{LB}$ & gl & Valor p \\ 
+  \hline
+6 & 798.69 & 6 & 0.0000 \\ 
+  12 & 1085.52 & 12 & 0.0000 \\ 
+  18 & 1144.49 & 18 & 0.0000 \\ 
+  24 & 1150.11 & 24 & 0.0000 \\ 
+  30 & 1220.55 & 30 & 0.0000 \\ 
+  36 & 1356.12 & 36 & 0.0000 \\ 
+  42 & 1463.27 & 42 & 0.0000 \\ 
+  48 & 1536.42 & 48 & 0.0000 \\
+   \hline
+\end{tabular}
+\caption{Resultados prueba Ljung-Box modelo 2.} 
+\label{tab:p3_lb}
+\end{table}
+
+En ambas pruebas, y para todos los valores de $m$ hay evidencia suficiente para rechazar $H_0$, es decir, por lo menos un $\rho_k \neq 0$ para $k=$ 1,2,...,m. La serie de los residuales no proviene de un ruido blanco.
+
+\textbf{d)} En este caso, por ser un modelo no lineal, la prueba Durbin-Watson no es posible aplicarla con las herramientas que tenemos. Sin embargo con las pruebas anteriores es concluyente que los residuales no provienen de un ruido blanco.
+
+
+\textbf{e)} Para este modelo, los residuales tampoco provienen de un ruido blanco y por lo  tanto el modelo ajustado no es válido. Posiblemente la varianza no constante, la presencia de ciclos y cambios estructurales que no se  pueden modelar con la tendencia escogida son los causante de la falta de ajuste del modelo.
+
+\textbf{f)} No, pues en este modelo la varianza de los residuales ya no es constante, es decir $\sigma_t^2 \neq \sigma^2 $. Como este requisito no se cumple, el proceso no es estacionario en covarianza, aun siendo estacionario en media y ergódico.
+
+
+\end{document}
