@@ -8,3 +8,7 @@
 *.pyg
 *.gz
 *.gnumeric
+*.bbl
+*.bcf
+*.blg
+*.xml
