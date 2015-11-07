@@ -1,122 +1,353 @@
-\documentclass{tufte-handout}
+\documentclass[11pt, letterpaper, twoside]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[spanish, es-tabla]{babel}
-\spanishdecimal{.}
+\spanishdecimal{.} % usar el punto como separador decimal
 
 \usepackage{amsmath}
-\usepackage{booktabs}
-\usepackage{minted}
+\usepackage{booktabs} % funciones adicionales de para tablas
+\usepackage{minted} % incluir código fuente en el artículo
+
+% para insertar gráficos
 \usepackage{graphicx}
+\graphicspath{{../img/}} % definir ruta (relativa) donde están los gráficos
 
-\graphicspath{{../img/}}
+% definir función para insertar palabras clave
+\providecommand{\keywords}[1]{\textbf{Palabras claves:} #1}
 
-\title{Taller 4: Identificación de procesos estacionarios y ruido blanco}
-\author{Juan Pablo Calle Quintero}
-\date{22 de octubre de 2015}
+% para que las notas al pie de página se marquen con números
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+% para que el símbolo de los ítem de las listas sea un circulo
+\renewcommand{\labelitemi}{$\circ$}
+
+% para alinear el título del resumen a la izquierda
+\renewenvironment{abstract}
+  {\small\quotation
+  {\bfseries\noindent{\abstractname}\par\nobreak\smallskip}}
+  {\endquotation}
+
+% personalizar márgenes
+\usepackage[top=2.54cm, bottom=2.54cm, left=2.54cm, right=2.54cm]{geometry}
+
+% personalizar encabezado y pie de página
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+
+% Definir el encabezado de todas las páginas excepto la primera
+\pagestyle{fancy}
+\fancyhf{} % borrar estilo por defecto
+\fancyhead[RE,RO]{\footnotesize{\textsc{\rightmark}}}
+\fancyfoot[CE,CO]{\thepage}
+\renewcommand{\headrulewidth}{0pt} % no incluir la línea en el encabezado
+\renewcommand{\footrulewidth}{0pt}
+
+% Definir el encabezado para la primera página
+\fancypagestyle{plain}{ %
+  \fancyhf{} % borrar estilo por defecto
+  \fancyhead[LO]{
+  \textbf{Técnicas de Pronósticos - 3008172, semestre 02 de 2015} \\
+  Equipo de Trabajo No. 05  \hspace{114pt}  Serie No. 05}
+  \renewcommand{\headrulewidth}{0pt} % remover lineas de encabezado y pie de p
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+\usepackage{csquotes} % requerido por biblatex
+%\usepackage[notes,backend=biber,bibencoding=inputenc]{biblatex-chicago}
+\usepackage[backend=biber,
+            style=numeric,
+            sorting=none]{biblatex} % gestionar las referencias
+\addbibresource{referencias.bib} % ruta donde están las referencias
+
+% quitar la indentación de párrafos y añadir un pequeño espacio entre ellos
+\usepackage{parskip}
+
+% definir caption de las figuras en negrita y más pequeño
+\usepackage[font=small,labelfont=bf]{caption}
+
+% usar figuras dentro del texto
+\usepackage{wrapfig}
+
+% rotar objetos: figuras, tablas, etc.
+\usepackage{rotating}
+
+% Encabezado
+\title{\textbf{AJUSTE DE MODELOS DE REGRESIÓN CON ERRORES ESTRUCTURALES ARMA}}
+
+\author{Andrea Vásquez Vélez\footnote{Universidad Nacional de Colombia - \text{anvasquez@unal.edu.co}} \, y Juan Pablo Calle Quintero\footnote{Universidad Nacional de Colombia - \text{jpcalleq@unal.edu.co}}}
+
+\date{6 de noviembre de 2015}
+
 
 \begin{document}
 \maketitle
 
-%%% Punto 1 ------------------------------------------------------------------
-\section*{Punto 1}
+\hrule
+\begin{abstract}
+\noindent En este trabajo se ajustará un modelo de regresión con errores estructurales ARMA a la serie trimestral del IVA  no deducible en Colombia entre el primer trimestre del 2000 y el tercero del 2014. Al modelo log-cuadrático estacional que resultó como mejor modelo en el trabajo pasado se le ajustará un una estructura ARMA para intentar capturar los ciclos que fue posible modelar con una tendencia global. Se utilizarán varios métodos de selección automática de modelos ARMA para proponer un modelo para los errores estructurales. Se encuentra que el mejor modelo para los errores estructurales es un AR(2)MA(1)[4] evidenciando posible presencia de estacionalidad no determinística en los la serie del IVA o deducible en Colombia.\\
 
-En la Figura~\ref{fig:p1_serie} vemos la serie mensual de ventas de licor en Estados Unidos desde enero de 1967 hasta diciembre de 1994. Son 336 observaciones. De esta gráfica podemos observar que la serie tiene una tendencia creciente clara, es decir $\mu_t \neq \mu$, y además se aprecia que la varianza va en aumento con el tiempo, o sea $\sigma_t^2 \neq \sigma^2$. Además, en la Figura~\ref{fig:p1_acf} vemos las autocorrelaciones muestrales de la serie, donde es claro que el proceso no es ergódico, pues $\lim_{k\to\infty} \rho(k)$ no converge rápidamente hacia cero.
+\noindent \keywords{\textit{IVA, Colombia, series de tiempo.}}
 
-\begin{marginfigure}
-	\includegraphics[scale=1]{p1_serie.pdf}
-	\caption{Serie ventas mensuales de licor en Estados Unidos.}
-	\label{fig:p1_serie}
-\end{marginfigure}
+\end{abstract}
+\hrule
 
-De acuerdo con lo anterior, la serie no cumple con los tres requisitos necesarios para ser estacionaria en covarianza.
 
-También podemos observar en la ACF que los coeficientes de autocorrelación muestrales en  $k=$ 12, 24, 36 y 48 son consistentemente más grandes que los demás, un patrón periódico, lo cuál puede indicar presencia de estacionalidad en la serie, en este caso de periodo $s=$ 12, es decir, mensual.
+\section*{Introducción}
 
-\begin{marginfigure}[2cm]
-	\includegraphics[scale=1]{p1_acf.pdf}
-	\caption{ACF de la serie mensual ventas de licor en Estados Unidos.}
-	\label{fig:p1_acf}
-\end{marginfigure}
+En este trabajo se analizará la serie del Impuesto al Valor Agregado (IVA) no deducible que hace parate de las Cuentas Nacionales Trimestrales (CNT) que reporta el Departamento Administrativo Nacional de Estadística (DANE). Las CNT tienen como objetivo sintetizar la información de coyuntura presentando oportunamente la situación económica. Sus resultados son utilizados ampliamente por analistas, políticos, académicos, la prensa, la comunidad empresarial y el público en general, como indicadores sintéticos de la actividad económica del país.~\cite{dane-cnt}
 
-%%% Punto 2 ------------------------------------------------------------------
-\section*{Punto 2}
+El IVA no deducible juega un papel importante en las CNT ya que es la mayor fuente de ingresos del Gobierno Nacional de Colombia y por ende afecta considerablemente a Producto Interno Bruto (PIB) del país. En el 2014 representaba 36 \% del recaudo nacional por impuestos y para el tercer trimestre del mismo año el valor recaudado equivalía al 5.8 \% del PIB~\cite{desaf-fisc-col}.
 
-\textbf{a)} En la Figura~\ref{fig:p2_residuales_mod1} se pueden var los residuales vs el tiempo y los valores ajustados del modelo 1 log-cuadrático estacional.
+La serie está sin desestacionalizar con el fin de estudiar los efectos estacionales que puedan ayudar a entender la evolución de la economía. Se cuanta con 59 observaciones, de periodicidad trimestral, que corresponden al recaudo nacional del IVA no deducible entre el primer trimestre del 2000 y el tercer trimestre del 2014. La cifras están dadas en miles de millones de pesos.
 
-Por los cambios los cambios bruscos en los valores residuales en los periodos 1980 a 1984, parece que este modelo que no es capaz de capturar los cambios estructurales que tuvo la serie en estos periodos, en estas fechas se está subestimando. Además se aprecia que hasta 1978 aproximadamente los residuales presentan una tendencia negativa consistente, lo cual indica que en este periodo el modelo está sobreestimado persistentemente a la serie real.
+En el trabajo anterior se propusieron cinco modelos para explicar el comportamiento del IVA no deducible; dos de tendencia global y tres de tendencia local. Los modelos propuestos fueron:
 
-También se ven algunas variaciones cíclicas normales en este tipo de series, por lo que posiblemete para algún $k$, $\rho_k \neq 0$, es decir, los residuales no provienen de un ruido blanco. Debido a los ciclos presentes los residuales no cumplen con el supuesto de independencia, por lo cual no es apropiado probar el supuesto de normalidad.
+\begin{itemize}
+    \item Log-cuadrático estacional con variables indicadoras
+    \item Exponencial-cuadrático estacional con variables indicadoras
+    \item Ajuste local con suavizamiento Holt-Winter multiplicativo
+    \item Ajuste local con LOESS lineal
+    \item Ajuste local con LOESS cuadrático
+\end{itemize}
 
-En la gráfica de los residuales vs valores ajustados podemos observar que el supuesto de la varianza constante sí se cumple debido a que no se observa ningún patrón anómalo en la distribución de los residuales.
+De los modelos propuestos se seleccionó el log-cuadrático estacional con variables indicadoras, ya que mostró una mejor capacidad de pronóstico y fue el que más se acercaba a cumplir con los supuestos de los errores, sobre todo en términos de la varianza. Si bien este modelo no lograba capturar los ciclos como los de ajuste local, sí mostró mejor comportamiento en predicción y varianza constante. También se debe destacar que este modelo seleccionado tenía problemas con la inestabilidad de los parámetros, debido en gran parte a algunos cambios estructurales en la serie.
 
-\begin{figure*}
-	\includegraphics[scale=1]{p2_residuales_mod1.pdf}
-	\caption{Gráficos de residuales modelo 1 log-cuadrático estacional.}
-	\label{fig:p2_residuales_mod1}
-\end{figure*}
+En este análisis se partirá de este modelo log-cuadrático estacional se propondrán modelos ARMA para intentar capturar los ciclos en la serie.
 
-\textbf{b)} En la ACF se puede observar que por lo menos hasta $k=$ 12 se rechaza la hipótesis nula $H_0:$ $\rho_k = 0$ vs  $\rho_k \neq 0$. Por lo tanto los residuales del modelo 1 no parecen provenir de un ruido blanco. La ACF sigue un patrón de cola amortiguada de tipo sinusoidal. La PACF no tiene un patrón claro, se podría pensar que a partir de $k=$ 4 hay un patrón de corte, sin embargo siguen apareciendo algunos rezagos significativos para valores de $k$ más adelante. Quizá esto se deba a los ciclos presentes en los residuales y las tendencias temporales en los residuales.
 
-\begin{figure*}
-	\includegraphics[scale=0.9]{p2_correlogramas_mod1.pdf}
-	\caption{Correlogramas de los residuales modelo 1 log-cuadrático estacional.}
-	\label{fig:p2_correlogramas_mod1}
-\end{figure*}
 
-\textbf{c)} Tanto para el test de Box-Pierce como el de Lung-Box la prueba de hipótesis es, que para cada $m$:
+\section{Análisis descriptivo y resultados del mejor modelo global}
+
+En la Figura~\ref{fig:series} se muestran los gráficos de la serie original y transformada mediante logaritmo natural. Lo primero que se aprecia y llama la atención sobre el comportamiento del IVA no deducible en Colombia es el estancamiento que tuvo en los años 2008 y 2009, después de venir creciendo 16.8 \% en promedio anualmente (respecto al mismo trimestre del año anterior), durante estos dos años el crecimiento apenas fue 3.4 \%. A partir del 2010  retoma su tendencia creciente, aunque con menor fuerza, con un crecimiento promedio de 10.4 \%. Este fenómeno de debe al fuerte impacto que tuvo la crisis financiera del 2008 en la inversión extranjera en Colombia, pues el recaudo del IVA externo, que representaba 34.8 \% y 32.0 \% del total recaudado respectivamente en estos años, creció apenas 0.3 \%, afectando el recaudo total\footnote{Cálculos propios, con información del PIB trimestral por ramas de actividad reportado por el DANE en el cuarto trimestre del 2014. Consulta: \text{http://www.dane.gov.co/files/investigaciones/boletines/pib/Anexos\_oferta\_constantes\_desestacionalizadas\_IV\_2014.xls}}.
+
+Este comportamiento coincide precisamente con los ciclos económicos y políticos que ha vivido el país en los últimos años. Del 2000 al 2007 con un comportamiento expansionista, frenado en 2008 y 2009 por la crisis financiera mundial, y vuelve a retomar la tendencia creciente por un tiempo, aunque no con la misma fuerza que traía~\cite{just-tribut}. Estos ciclos se deben tener en cuenta a la hora de modelar la serie, pues hasta ahora no tenemos manera de incorporarlos a un modelo por lo que se verán reflejados en los residuales.
+
+La varianza de la serie sin transformar tiene un comportamiento creciente en el tiempo, aunque leve (ver Figura~\ref{fig:series}). De hecho, la serie transformada con logaritmo natural muestra una varianza más estable en el tiempo, parece ser de componentes multiplicativas.
+
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[scale=0.8]{series.pdf}
+    \caption{Izq. serie del IVA no deducible en su escala original. Der. logaritmo de la serie.}
+    \label{fig:series}
+\end{figure}
+
+
+Viendo la tendencia de la serie transformada mediante logaritmo natural no parece apropiado un modelo de tendencia global ya que a partir de 2008 la serie muestra un comportamiento distinto al que traía, la serie transformada parece tener una tendencia lineal del 2000 al 2007, en los dos años siguientes, con la desaceleración de la economía, podría decirse que se mantuvo estable, y a partir del 2009 se ve una tendencia creciente de nuevo, pero esta vez ya no es lineal sino cuadrática o quizá cúbica. A pesar de lo anterior, en el trabajo anterior vimos que un modelo global se comportaba en términos  generales que los modelos de ajuste local, de esta manera se podría pensar en un modelo global con tendencia cuadrática, dado el comportamiento de los últimos años de la serie, eso sí, teniendo cuenta que este tipo de tendencia solo aplica para hacer predicciones a muy corto plazo, pues por la misma estructura, la tendencia tendría una concavidad hacia abajo, indicando que después de un tiempo dado la serie decae sostenidamente sin recuperación, lo cual no tienen mucho sentido, pero a pesar de esto a corto plazo puede ser útil.
+
+Además de todo esto, también se logra apreciar en el recaudo por IVA no deducible un patrón repetitivo que permanece constante en el tiempo, lo cual nos da un indicio de posible presencia de componente estacional que podría ser modelado con variables indicadoras.
+
+
+%\begin{figure}[ht!]
+%   \centering
+%   \includegraphics[scale=0.8]{acf_log_serie.pdf}
+%   \caption{ACF del logaritmo de la serie, hasta el rezago $k=$ 24.}
+%   \label{fig:acf_log_serie}
+%\end{figure}
+
+%\marginpar{%
+%  \includegraphics[width=\marginparwidth]{acf_log_serie.pdf}
+%  \captionof{figure}{ACF del logaritmo de la serie, hasta el rezago $k=$ 24.}
+%}
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \vspace{-20pt}
+  \centering
+  \includegraphics[width=0.38\textwidth]{acf_log_serie.pdf}
+  \caption{ACF del logaritmo de la serie, hasta el rezago $k=$ 24.}
+  \label{fig:acf_log_serie}
+\end{wrapfigure}
+
+
+En la Figura~\ref{fig:acf_log_serie} se muestra la función de autocorrelación (ACF) hasta el rezago $k=$ 24 del logaritmo de la serie. La ACF decae muy lentamente y al parecer tiene un patrón sinusoidal. Este patrón concuerda con el de una serie no estacionaria ($\lim_{k\to\infty} \rho(k)$ no converge rápidamente hacia cero), además va de la mano con el análisis que se hizo de la serie, ya que se mostró que esta no oscila al rededor de una media constante, es decir $\mu_t \neq \mu$ para todo $t$. De los tres requisitos necesarios para la estacionaridad no se cumplen dos de ellos, media constante y ergodicidad, la varianza del logaritmo de la serie sí parece ser constante.
+
+De acuerdo con lo que se ha visto, el modelo teórico log-cuadrático estacional con variables indicadoras está dado por:
+
+\begin{align}
+    \label{eq:mod_teo}
+    log(Y_t)=\beta_0 + \beta_1 t + \beta_2 t^2 + \delta_2 I_{2t} + \delta_3 I_{3t} + \delta_4 I_{4t} + E_t
+\end{align}
+
+Donde $E_t \overset{iid}{\sim} N(0,\sigma^2)$ e $I_{jt}$ es una variable indicadora que toma el valor de uno cuando la observación pertenece al trimestre $j=$ 2, 3 y 4 en el tiempo $t$ y toma el valor de cero en otros casos.
+
+\begin{table}[ht]
+\caption{Ajuste modelo log-cuadrático estacional con validación cruzada.}
+\centering
+\begin{tabular}{crrrr}
+Parámetro & Estimación & Error Estándar & $t_0$ & Pr($|t_{49}|>$$|t_0|$) \\
+  \hline
+$\beta_0$ & 7.449 & 0.02435 & 305.852 & $<2\times10^{-16}$ \\
+$\beta_1$ & 0.0471 & 0.00179 &  26.302 & $<2\times10^{-16}$ \\
+$\beta_2$ & -2.845$\times10^{-4}$ & 3.097$\times10^{-5}$ & -9.184 & 3.136$\times10^{-12}$ \\
+$\delta_2$ & 0.0262 & 0.01952 & 1.342 & 0.1857 \\
+$\delta_3$ & 0.0394 & 0.01953 & 2.019 & 0.0489 \\
+$\delta_4$ & 0.1315 & 0.01992 & 6.599 & 2.775$\times10^{-8}$ \\
+   \hline
+    \multicolumn{3}{l}{$exp(C_n^*(p)):$ $AIC=$ 114754.0 $BIC=$ 142846.8} & & \\
+    \hline
+\end{tabular}
+\label{tab:modelo_aju}
+\end{table}
+
+Los resultados de la estimación del modelo se pueden observar en la Tabla~\ref{tab:modelo_aju}. Y en (\ref{eq:mod_aju_orig}) se muestra la ecuación ajustada en la escala original con el factor de corrección lognormal $exp(0.5\sigma^2)=$ 1.0013.
+
+\begin{align}
+    \label{eq:mod_aju_orig}
+    \hat{Y}_t=1734.939+1.048 t + 1.027 t^2 + 0.0262 I_{2t} + 1.040 I_{3t} + 1.141 I_{4t}
+\end{align}
+
+Se observa que los parámetros que determinan el modelos, tendencia cuadrática e indicadores para la estacionalidad son significativos  para valores de significancia $\alpha$ pequeños. A continuación se muestran las pruebas de hipótesis relevantes.
+
+\textbf{Prueba de hipótesis para $\beta_2$:}
+
+$H_0:$ $\beta_2 = 0$
+
+$H_a:$ $\beta_2 \neq 0$
+
+El estadístico de prueba es $t_0=\frac{\hat{\beta}_2}{se(\hat{\beta}_2)}=\frac{2.845\times10^{-4}}{3.097\times10^{-5}}=-9.184$ que es mucho mayor en valor absoluto que los valores críticos $t_{\alpha,49}$ =  2.68, 2.01 y 1.68 para valores de $\alpha =$ 1 \%, 5 \% y 10 \% respectivamente. Equivalentemente, el valor p (3.136$\times10^{-12}$) es mucho menor que los valores de significancia mencionados. Por lo tanto, para niveles de significancia pequeños, hay evidencia suficiente para rechazar $H_0$, lo que significa que la tendencia cuadrática sí logra explicar el logaritmo del valor recaudado por IVA no deducible.
+
+\textbf{Prueba de hipótesis para $\delta_2$:}
+
+$H_0:$ $\delta_2 = 0$
+
+$H_a:$ $\delta_2 \neq 0$
+
+El estadístico de prueba es $t_0=\frac{\hat{\delta}_2}{se(\hat{\delta}_2)}=\frac{0.0262}{0.01952}=1.342$ que es mayor en valor absoluto que un valor crítico aceptable $t_{\alpha,49}$ =  1.30 para $\alpha =$ 20 \%. Equivalentemente, el valor p (0.1857) es menor que el valor de significancia mencionado. Por lo tanto, con un nivel de significancia aceptable, hay evidencia suficiente para rechazar $H_0$, lo que significa que la diferencia del efecto del segundo trimestre en el promedio del logaritmo del valor recaudado por IVA no deducible es diferente comparado con el primer trimestre. Aquí se podría discutir sobre la significancia de este parámetro y si de verdad hay o no una diferencia entre los trimestres uno y dos, pero de decide dejarlo en el modelo ya que los montos que se manejan en estas cuentas trimestrales son del orden de billones por lo que una pequeña diferencia puede significar una gran cantidad de dinero.
+
+\textbf{Prueba de hipótesis para $\delta_3$:}
+
+$H_0:$ $\delta_3 = 0$
+
+$H_a:$ $\delta_3 \neq 0$
+
+El estadístico de prueba es $t_0=\frac{\hat{\delta}_3}{se(\hat{\delta}_3)}=\frac{0.0394}{0.01953}=2.019$ que es mayor en valor absoluto que un valor crítico aceptable $t_{\alpha,49}$ =  2.01, 1.68 y 1.46 para valores de $\alpha =$ 5 \%, 10 \% y 15 \% respectivamente. Equivalentemente, el valor p (2.775$\times10^{-8}$) es mucho menor que los valores de significancia mencionados. Por lo tanto, con un nivel de significancia aceptable, hay evidencia suficiente para rechazar $H_0$, lo que significa que la diferencia del efecto del tercer trimestre en el promedio del logaritmo del valor recaudado por IVA no deducible es diferente comparado con el primer trimestre.
+
+
+\textbf{Prueba de hipótesis para $\delta_4$:}
+
+$H_0:$ $\delta_4 = 0$
+
+$H_a:$ $\delta_4 \neq 0$
+
+El estadístico de prueba es $t_0=\frac{\hat{\delta}_4}{se(\hat{\delta}_4)}=\frac{0.1315}{0.01992}=6.599$ que es mayor en valor absoluto que un valor crítico aceptable $t_{\alpha,49}$ =  2.68, 2.01 y 1.68 para valores de $\alpha =$ 1 \%, 5 \% y 10 \% respectivamente. Equivalentemente, el valor p (3.136$\times10^{-12}$) es mucho menor que los valores de significancia mencionados. Por lo tanto, con un nivel de significancia aceptable, hay evidencia suficiente para rechazar $H_0$, lo que significa que la diferencia del efecto del tercer trimestre en el promedio del logaritmo del valor recaudado por IVA no deducible es diferente comparado con el primer trimestre.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.9]{series_aju_y_prono.pdf}
+\caption{Izq. serie observada vs serie ajustada en escala original. Der. pronósticos para el cuarto trimestre del 2013 y los tres primeros del 2014.}
+\label{fig:series_aju_y_prono}
+\end{figure}
+
+La ecuación de los pronósticos para $L$ periodos adelante, en la escala original con un factor de corrección lognormal $exp(0.5\sigma^2)=$ 1.0013 es:
+
+\begin{align}
+\label{eq:mod_aju_pron}
+\hat{Y}_{49}(L) \approx 1734.94+1.05 (t+L) + 1.03 (t + L)^2 + 0.026 I_{2(t+L)} + 1.04 I_{3(t+L)} + 1.14 I_{4(t+L)}
+\end{align}
+
+En la Tabla~\ref{tab:pron_mod_aju} se muestran los pronósticos puntuales con sus respectivos intervalos del 95 \% y los valores observados de la serie. Se observa que los pronósticos puntuales caen todos dentro de los intervalos de pronóstico, además en promedio los pronósticos estarán por debajo o por encima de la estimación puntual 1240.10 mil millones de pesos (la amplitud promedio de los IC es 2480.21 miles de millones de pesos).
+
+\begin{table}[ht!]
+\caption{Resumen de los pronósticos del modelo usando validación cruzada.}
+\label{tab:pron_mod_aju}
+\centering
+\begin{tabular}{lrrrrr}
+& & & & \multicolumn{2}{c}{Intervalos Pronóstico 95 \%} \\
+Periodo & L & Observado & Pronóstico & Inferior & Superior \\
+\hline
+2013 T4 & 1 & 10983 & 11210.56 & 9984.57 & 12587.09 \\
+2014 T1 & 2 & 10633 & 9977.35 & 8881.65 & 11208.22 \\
+2014 T2 & 3 & 9978 & 10390.15 & 9237.91 & 11686.11 \\
+2014 T3 & 4 & 11003 & 10674.576 & 9478.30 & 12021.84 \\
+\hline
+\multicolumn{6}{l}{Amplitud prom IC: 2480.21, Cobertura: 100 \%} \\
+\hline
+\end{tabular}
+\end{table}
+
+En la Tabla~\ref{tab:prec_pron} aparecen las medidas de precisión de los pronósticos, se puede apreciar que la desviación porcentual promedio del pronóstico con respecto al valor real es del 3.84 \%, o equivalentemente, en términos monetarios, 405.95 mil millones de pesos.
+
+\begin{table}[ht!]
+\caption{Resumen medidas de precisión de los pronósticos.}
+\label{tab:prec_pron}
+\centering
+\begin{tabular}{lr}
+\hline
+RMSE & 435.71 \\
+MAE & 405.95 \\
+MAPE & 3.84 \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Postulación de modelos con errores ARMA(p,q)}
+
+En esta sección se analizarán los supuestos sobre los errores estructurales estimados $\hat{E}_t$ del modelo propuesto en (\ref{eq:mod_teo}).
+
+\subsection{Validación de supuestos}
+
+En la Figura~\ref{fig:residuales} se muestran los gráficos de $\hat{E}_t$ vs el tiempo y los valores ajustados. Los errores estructurales están siguiendo los mismos ciclos de los que hablamos en el análisis preliminar de la serie, sin embargo no hay un cambio en la varianza de los residuales de manera generalizada, únicamente los brincos en los cambios de ciclos, así que podríamos asumir una varianza constante, parece que el modelo multiplicativo sí es acertado. También se ve que el modelo es incapaz de capturar los ciclos con una tendencia global únicamente, ya que los cambios no son suaves, sobre todo por los cambios estructurales. En los periodos 2001-2006 se nota que el modelo está sobre estimando los valores reales, pues los residuales tienden a estar por debajo de cero de manera consistente en este periodo, de nuevo se evidencia que el modelo es incapaz de capturar todos los ciclos con una sola tendencia global.
+
+Concluyendo, el modelo no parece tener problemas de carencia de ajuste, lo que pasa es que no es capaz de capturar los ciclos de la serie, parece que no es apropiado asumir una tendencia de tipo global únicamente debido a los cambios drásticos de tendencia que presenta la serie y a los ciclos, los errores sí parecen tener una varianza constante en el tiempo. Por estos motivos es que se propone modelar $\hat{E}_t$ como un ARMA(p,q).
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.9]{residuales.pdf}
+\caption{Gráficas de diagnóstico de los residuos estructurales $\hat{E}_t$ del modelo log-cuadrático estacional propuesto en (\ref{eq:mod_teo})}
+\label{fig:residuales}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.75]{acf_pacf_res.pdf}
+\caption{ACF y PACF de los errores estructurales estimados del modelo (\ref{eq:mod_teo})}
+\label{fig:acf_pacf_res}
+\end{figure}
+
+Ahora se probará la incorrelación con los test de Durbin-Watson, Box-Pierce, Ljung-Box y la ACF.
+
+\begin{table}[ht!]
+\caption{Prueba Box-Pierce y Ljung-Box de los errores estructurales estimados del modelo (\ref{eq:mod_teo}).}
+\label{tab:res_mod_bp_lb}
+\centering
+\begin{tabular}{rrrrrr}
+& & \multicolumn{2}{c}{Box-Pierce} & \multicolumn{2}{c}{Ljung-Box} \\
+\cline{3-6}
+m & gl & $Q_{BP}$ & \small{$\Pr(\chi_m^2 >Q_{BP})$} & $Q_{LB}$ & \small{$\Pr(\chi_m^2 >Q_{LB})$} \\
+  \hline
+6 & 6 & 84.45 & $4.44\times10^{-16}$ & 90.59 & $<2\times10^{-16}$ \\
+  12 & 12 & 141.02 & $<2\times10^{-16}$ & 161.68 & $<2\times10^{-16}$ \\
+  18 & 18 & 152.25 & $<2\times10^{-16}$ & 177.33 & $<2\times10^{-16}$ \\
+  24 & 24 & 152.48 & $<2\times10^{-16}$ & 177.72 & $<2\times10^{-16}$ \\
+   \hline
+\end{tabular}
+\end{table}
+
+Tanto para el test de Box-Pierce como el de Lung-Box la prueba de hipótesis es, que para cada $m=$ 6, 12, 18 y 24:
 
 $H_0:$ $\rho_1=\rho_2=...=\rho_m=0$ vs.
 
-$H_a:$ $\rho_k \neq 0$ para algún $k=1,2,...,m$
+$H_a:$ $\rho_k \neq 0$ para algún $k=$ 6, 12, 18 y 24
 
-El estadístico de prueba del test Box-Pierce es $Q_{BP}=n \sum_{k=1}^m \hat{\rho}_k^2 \sim \text{ aproximadamente } \chi_m^2$ y el de Lung-Box es $Q_{LB}=n(n+2) \sum_{k=1}^m \hat{\rho}_k^2/(n-k) \sim \text{ aproximadamente } \chi_m^2$. En ambos casos se rechaza $H_0$ si el valor p es pequeño, calculado como $\Pr(\chi_m^2 >Q_{BP})$ y $\Pr(\chi_m^2 >Q_{LB})$.
+El estadístico de prueba del test Box-Pierce es $Q_{BP}=n \sum_{k=1}^m \hat{\rho}_k^2 \sim \text{ aproximadamente } \chi_m^2$ y el de Lung-Box es $Q_{LB}=n(n+2) \sum_{k=1}^m \hat{\rho}_k^2/(n-k) \sim \text{ aproximadamente } \chi_m^2$. En ambos casos se rechaza $H_0$ si el valor p calculado como $\Pr(\chi_m^2 >Q_{BP})$ y $\Pr(\chi_m^2 >Q_{LB})$ es pequeño en el contexto del problema.
 
-En las Tablas \ref{tab:p2_bp} y \ref{tab:p2_lb} se observan los resultados de los test de Box-Pierce y de Lung-Box respectivamente para valores de $m=$ 48.
+En la Tabla~\ref{tab:res_mod_bp_lb} se observan los resultados de los test de Box-Pierce y de Lung-Box respectivamente para valores de $m=$ 6, 12, 18 y 24.
 
-\begin{table}[ht]
+En ambas pruebas, y para todos los valores de $m$ hay evidencia suficiente para rechazar $H_0$, es decir, por lo menos un $\rho_k \neq 0$ para $k=$ 6, 12, 18, 24. La serie de los errores estructurales $\hat{E}_t$ no proviene de un ruido blanco.
+
+\begin{table}[ht!]
 \centering
-\begin{tabular}{rrrr}
+\begin{tabular}{rrrrr}
+lag & $\hat{\rho}(1)$ & $d_1$ & $\Pr(DW_1 < d_1)$ & $\Pr(DW_1 > d_1)$ \\
   \hline
-m & $Q_{BP}$ & gl & Valor p \\ 
-  \hline
-6 & 759.58 & 6 & 0.0000 \\ 
-  12 & 1084.00 & 12 & 0.0000 \\ 
-  18 & 1163.78 & 18 & 0.0000 \\ 
-  24 & 1176.19 & 24 & 0.0000 \\ 
-  30 & 1205.68 & 30 & 0.0000 \\ 
-  36 & 1265.85 & 36 & 0.0000 \\ 
-  42 & 1315.41 & 42 & 0.0000 \\ 
-  48 & 1355.18 & 48 & 0.0000 \\ 
+1 & 0.8629 & 0.2406 & 0.00000 & 1.00000 \\
    \hline
 \end{tabular}
-\caption{Resultados prueba Box-Pierce modelo 1.} 
-\label{tab:p2_bp}
+\caption{Resultados prueba de orden 1 Durbin-Watson.}
+\label{tab:res_mod_db}
 \end{table}
 
-\begin{table}[ht]
-\centering
-\begin{tabular}{rrrr}
-  \hline
-m & $Q_{LB}$ & gl & Valor p \\ 
-  \hline
-6 & 771.87 & 6 & 0.0000 \\ 
-  12 & 1107.81 & 12 & 0.0000 \\ 
-  18 & 1191.90 & 18 & 0.0000 \\ 
-  24 & 1205.24 & 24 & 0.0000 \\ 
-  30 & 1237.79 & 30 & 0.0000 \\ 
-  36 & 1305.39 & 36 & 0.0000 \\ 
-  42 & 1362.26 & 42 & 0.0000 \\ 
-  48 & 1408.85 & 48 & 0.0000 \\ 
-   \hline
-\end{tabular}
-\caption{Resultados prueba Ljung-Box modelo 1.} 
-\label{tab:p2_lb}
-\end{table}
-
-En ambas pruebas, y para todos los valores de $m$ hay evidencia suficiente para rechazar $H_0$, es decir, por lo menos un $\rho_k \neq 0$ para $k=$ 1,2,...,m. La serie de los residuales no proviene de un ruido blanco.
-
-\textbf{d)} Para el test de Durbin-Watson de orden 1 se plantea la siguiente prueba de hipótesis: 
+Para el test de Durbin-Watson de orden 1 se plantea la siguiente prueba de hipótesis:
 
 $H_0:$ $\rho(1)=0$ vs.
 
@@ -124,106 +355,460 @@ $H_a:$ $\rho(1)>0$ (ya que $\hat{\rho}(1)>0$)
 
 El estadístico de prueba es $d_1 = \frac{\sum_{t=2}^n (\hat{E}_t - \hat{E}_{t-1})^2}{\sum_{t=1}^n \hat{E}_t^2}$, si $0<d_1<2$ entonces se rechaza $H_0: \rho(1)=0$ en favor de $H_a: \rho(1)>0$.
 
-En la Tabla~\ref{tab:p2_db} se muestra el resultado dela prueba Durbin-Warson. Como $d_1 < 1$ y $\Pr(DW_1 < d_1)$ muy pequeño, entonces hay evidencia suficiente para rechazar $H_0$, es decir hay autocorrelación positiva por lo menos de orden 1 en los residuales del modelo. No provienen de un ruido blanco.
+En la Tabla~\ref{tab:res_mod_db} se muestra el resultado dela prueba Durbin-Warson. Como $d_1 < 1$ y $\Pr(DW_1 < d_1)$ muy pequeño, entonces hay evidencia suficiente para rechazar $H_0$, es decir hay autocorrelación positiva por lo menos de orden 1 en los errores estructurales del modelo. No provienen de un ruido blanco.
 
-\begin{table}[ht]
+En la Figura~\ref{fig:acf_pacf_res} se muestra la ACF de la serie $\hat{E}_t$, se puede observar que por lo menos hasta $k=$ 3 se rechaza la hipótesis nula $H_0:$ $\rho_k = 0$ vs  $\rho_k \neq 0$. Por lo tanto los residuales del modelo 1 no parecen provenir de un ruido blanco. La ACF sigue un patrón de cola amortiguada de tipo sinusoidal.
+
+La ACF sí parece decaer rápidamente hacia cero cuando $k$ tiende a $\infty$ (ergódico), y a pesar de los ciclos, los errores oscilan al rededor de cero, y el supuesto de la varianza constante también parece que se cumple. Por lo tanto el proceso $\hat{E}_t$ sí parece ser estacionario.
+
+\subsection{Identificación de procesos estacionarios para $\hat{E}_t$}
+
+En la sección anterior se mostró que los errores estructurales del modelo (\ref{eq:mod_teo}) no seguían un proceso de ruido blanco, aunque sí parecían ser estacionarios. Ahora se debe identificar el mejor modelo ARMA para los errores.
+
+\textbf{Nota:} para todo los modelos teóricos aquí propuestos se supone que $a_t$ es un $RBN(0,\sigma_a^2)$.
+
+\textbf{Método ACF y PACF:}
+
+En la Figura~\ref{fig:acf_pacf_res} se muestran la ACF y PACF. La ACF parece seguir un patrón de cola amortiguada sinusoidal, mientras que la PACF parece tener un patrón de corte a partir de $k=$ 1, sin embargo no es claro si los rezagos $k=$ 2, 5 y 13 son significativos. Quizá esto se deba a los ciclos presentes en los residuales o a componentes estacionales no determinísticas. Con estos resultados se podría pensar inicialmente en un modelo AR(1) como mínimo para $\hat{E}_t$.
+
+\begin{align}
+\label{eq:mod_err_acf}
+    E_t = \phi_1 E_{t-1} + a_t
+\end{align}
+
+\textbf{Método EACF:}
+
+En la Figura~\ref{fig:eacf} se muestra la salida de R de la EACF. El vértice del triángulo cae en el orden $p=$ 1 y $q=$ 3, arrojando un modelo ARMA(1,3). Por el análisis de la ACF se sabe que por lo menos debe tener un término AR, sin embargo aquí vemos que posiblemente un modelo con términos MA también sea válido.
+
+En esta caso, el modelo para $\hat{E}_t$ es:
+
+\begin{align}
+\label{eq:mod_err_eacf}
+    E_t = \phi_1 E_{t-1} + a_t + \theta_1 a_{t-1} + \theta_2 a_{t-2} + \theta_3 a_{t-3}
+\end{align}
+
+\begin{figure}[h!]
 \centering
-\begin{tabular}{rrrrr}
-  \hline
-lag & $\hat{\rho}(1)$ & $d_1$ & VP $\rho>$0 & VP $\rho<$0 \\ 
-  \hline
-1 & 0.68986 & 0.60553 & 0.00000 & 1.00000 \\ 
-   \hline
+\includegraphics[scale=0.6]{eacf_e.png}
+\caption{EACF de los errores estructurales.}
+\label{fig:eacf}
+\end{figure}
+
+\textbf{Método armasubsets:}
+
+En la Figura~\ref{fig:armasubset} se muestra el resultado de la selección de modelos con la función armasubsets() del paquete TSA de R. En esta caso, los mejores modelos para $\hat{E}_t$ son:
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.8]{armasubset.pdf}
+\caption{Resultado mejor modelo con la función armasubsets()}
+\label{fig:armasubset}
+\end{figure}
+
+Modelo AR(5), pero solo $\phi_1$ y $\phi_5$ van en el modelo:
+\begin{align}
+\label{eq:mod_err_armasubset1}
+    E_t = \phi_1 E_{t-1} + \phi_5 E_{t-5} + a_t
+\end{align}
+
+Modelo ARMA(5,6), pero solo $\phi_1$, $\phi_5$ y $\theta_6$ van en el modelo:
+
+\begin{align}
+\label{eq:mod_err_armasubset2}
+    E_t = \phi_1 E_{t-1} + \phi_5 E_{t-5} + a_t + \theta_6 a_{t-6}
+\end{align}
+
+\textbf{Método SelectModel:}
+
+Como dentro de los modelos posibles puede estár un AR, utilizaremos esta la función SelectModel() del paquete FitAR de R.
+
+En la Figura~\ref{fig:select_model} se muestra el resultado del mejor modelo variando los criterios de información AIC y BIC.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.8]{select_model.png}
+\caption{Resultado mejor modelo con la función SelectModel()}
+\label{fig:select_model}
+\end{figure}
+
+Note que este método selecciona un modelo extemadamente alto, pero la ACF y PACF no mostraba evidencia de un orden AR tan alto, por lo tanto se descarta el primer modelo y se toma el segundo que es más parsimonioso.
+
+Con el criterio AIC el mejor modelo para $\hat{E}_t$ es:
+
+\begin{align}
+\label{eq:mod_err_select_model1}
+    E_t = \sum_{i=1}^{4} \phi_i E_{t-i} + a_t
+\end{align}
+
+Con el criterio BIC el mejor modelo para $\hat{E}_t$ es:
+
+\begin{align}
+\label{eq:mod_err_select_model2}
+    E_t = \sum_{i=1}^{5} \phi_i E_{t-i} + a_t
+\end{align}
+
+\textbf{Método auto.arima:}
+
+Sin tener en cuenta la estacionalidad ambos criterios seleccionan en mismo modelo AR(2) estacionario ($d=0$) y de media cero:
+
+\begin{align}
+\label{eq:mod_err_autoarima}
+    E_t = \phi_1 E_{t-1} + \phi_2 E_{t-2} + a_t
+\end{align}
+
+Teniendo en cuenta la estacionalidad, con el criterio AIC el modelo seleccionado un AR(3)MA(1)[4] estacionario ($d=D=0$) y de media cero:
+
+\begin{align}
+\label{eq:mod_err_autoarimas1}
+    \phi_3(B) E_t = &\, \Theta_4(B^4) a_t \\
+    E_t = &\, \phi_1 E_{t-1} + \phi_2 E_{t-2} + \phi_3 E_{t-3} + a_t + \Theta_1 a_{t-4} \nonumber
+\end{align}
+
+Teniendo en cuenta la estacionalidad, con el criterio BIC el modelo seleccionado un AR(2)MA(1)[4] estacionario ($d=D=0$) y de media cero:
+
+\begin{align}
+\label{eq:mod_err_autoarimas2}
+    \phi_2(B) E_t = &\, \Theta_4(B^4) a_t \\
+    E_t = &\, \phi_1 E_{t-1} + \phi_2 E_{t-2} + a_t + \Theta_1 a_{t-4} \nonumber
+\end{align}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.8]{autoarima.png}
+\caption{Resultado mejor modelo con la función SelectModel()}
+\label{fig:autoarima}
+\end{figure}
+
+\subsection{Modelos propuestos de regresión global con errores estructurales ARMA}
+
+De acuerdo con los métodos vistos en la sección anterior, se escogerán tres modelos.
+
+Con la función armasubsets() el mejor modelo es un AR(5) donde solo entran en el los parámetros $\phi_1$ y $\phi_5$, ver (\ref{eq:mod_err_armasubset1}). Este modelo es más parsimonioso que el otro ARMA(5,6) y tiene menor criterio de información, además no hay una razón de peso para seleccionar un modelo con componente MA de orden 6, de pronto si estuviera más cerca de los rezagos que determinan posible estacionalidad (múltiplos de 4), se podría pensar en seleccionar este último.
+
+Con auto.arima() el mejor modelo es el AR(2)MA(1)[4] propuesto en (\ref{eq:mod_err_autoarimas2}), pues más parsimonioso que el AR(3)MA(1)[4].
+
+Con los residuales sin fecha, y teniendo en cuenta la ACF-PACF, la función auto.arima(), SelectModel() y la EACF el mejor modelo es...
+
+\begin{sidewaystable}
+\caption{Resumen selección de modelos analizados.}
+\label{tab:resumen_modelos}
+\centering
+{\footnotesize
+\begin{tabular}{|p{1.8cm}|p{1.8cm}|p{1.8cm}|p{1.8cm}|p{1.7cm}|p{1.7cm}|p{0.9cm}|p{0.9cm}|p{0.8cm}|p{0.8cm}|p{0.9cm}|p{1.3cm}|c|}
+\hline
+ & \multicolumn{5}{c}{Resultados validación supuestos para errores de ajuste} & \multicolumn{2}{|c|}{Calidad ajustes} & \multicolumn{5}{c|}{Calidad de pronósticos} \\
+ \hline
+ Modelos \newline armasubsets & Varianza cte \newline (sí,no) & Rechazos \newline ACF \newline (k = 24) & Rechazos \newline PACF \newline (k = 24) & Rechazos en \newline Ljung-Box \newline (m = 24) & Normalidad \newline (sí,no) & AIC & BIC & RMSE & MAE & MAPE & Amplitud \newline prom IP & Cobertura \\
+
+ \hline
+ AR(5) \newline solo $\phi_1$ y $\phi_5$ & Sí & 0 & 0 & 0 & Sí & 22620.2 & 30290.1 & 435.69 & 407.46 & 3.84 & 1216.65 & 75 \% (3/4) \\
+ \hline
+ ARMA(5,6) \newline solo $\phi_1$, $\phi_5$ y $\theta_6$  & Sí & 0 & 0 & 0 & Sí & 22173.7 & 30795.9 & 444.07 & 425.42 & 4.01 & 1211.81 & 75 \% (3/4) \\
+ \hline
+ \multicolumn{13}{c}{} \\
+ \hline
+  & \multicolumn{5}{c}{Resultados validación supuestos para errores de ajuste} & \multicolumn{2}{|c|}{Calidad ajustes} & \multicolumn{5}{c|}{Calidad de pronósticos} \\
+ \hline
+ Modelos \newline arma \newline estacionales & Varianza cte \newline (sí,no) & Rechazos \newline ACF \newline (k = 24) & Rechazos \newline PACF \newline (k =  24) & Rechazos en \newline Ljung-Box \newline (m = 24) & Normalidad \newline (sí,no) & AIC & BIC & RMSE & MAE & MAPE & Amplitud \newline prom IP & Cobertura \\
+ \hline
+ \tiny{auto.arima AIC \newline AR(3)MA(1)[4]} & Sí & 0 & 0 & 0 & Sí & 27139.1 & 37692.1 & 435.38 & 336.45 & 3.26 &  1832.35 & 100 \% (4/4) \\
+ \hline
+ \tiny{auto.arima BIC \newline AR(2)MA(1)[4]} & Sí & 0 & 0 & 0 & Sí & 25995.0 & 36103.0 & 436.47 & 334.04 & 3.24 & 1613.06 & 100 \% (4/4) \\
+ \hline
+ \multicolumn{13}{c}{} \\
+ \hline
+  & \multicolumn{5}{c}{Resultados validación supuestos para errores de ajuste} & \multicolumn{2}{|c|}{Calidad ajustes} & \multicolumn{5}{c|}{Calidad de pronósticos} \\
+ \hline
+ Modelos \newline otros \newline métodos & Varianza cte \newline (sí,no) & Rechazos \newline ACF \newline (k = 24) & Rechazos \newline PACF \newline (k =  24) & Rechazos en \newline Ljung-Box \newline (m =  24) & Normalidad \newline (sí,no) & AIC & BIC & RMSE & MAE & MAPE & Amplitud \newline prom IP & Cobertura \\
+ \hline
+ ACF-PACF \newline AR(1) & No & 0 & 0 & 1 (m = 12) & NA \newline (no indep) & 29405.6 & 37965.0 & 426.22 & 396.10 & 3.75 & 1326.08 & 75 \% (3/4) \\
+ \hline
+ SelectModel AIC \newline AR(4) & Sí & 0 & 1 (k = 11) & 0 & Sí & 26695.3 & 37075.6 & 454.99 & 420.92 & 3.96 & 1334.26 & 75 \% (3/4) \\
+ \hline
+ SelectModel BIC \newline AR(5) & Sí & 0 & 0 & 0 & Sí & 21590.5 & 29985.9 & 416.17 & 390.41 & 3.70 & 1172.78 & 75 \% (3/4) \\
+ \hline
+ EACF \newline ARMA(1,3) & Sí & 0 & 0 & 0 & Sí & 29148.6 & 40482.8 & 441.63 & 411.28 & 3.88 & 1357.30 & 75 \% (3/4) \\
+ \hline
+ auto.arima AIC y BIC \newline AR(2) & Sí & 0 & 1 (k = 11) & 0 & Sí & 27455.2 & 38131.1 & 462.14 & 398.23 & 3.76 & 1418.32 & 75 \% (3/4) \\
+ \hline
 \end{tabular}
-\caption{Resultados prueba de orden 1 Durbin-Watson.} 
-\label{tab:p2_db}
+}
+\end{sidewaystable}
+
+
+\section{Ajuste de modelos con validación cruzada}
+
+Ahora se ajustarán los tres modelos identificados para los errores estructurales $\hat{E}_t$ con el modelos global log-cuadrático estacional.
+
+\textbf{Modelo 1: log-cuadrático con errores AR(5) restringido:}
+
+De acuerdo con el método de selección armasubsets, el mejor modelos para la los errores es un AR(5), pero solo $\phi_1$ y $\phi_5$ van en el modelo, tal como se definió en (\ref{eq:mod_err_armasubset1}.
+
+\begin{align}
+\label{eq:mod1_ar5}
+    log(Y_t) = & \, \beta_0 + \beta_1 t + \beta_2 t^2 + \delta_2 I_{2t} + \delta_3 I_{3t} + \delta_4 I_{4t} + E_t \\
+    E_t = & \, \phi_1 E_{t-1} + \phi_5 E_{t-5} + a_t \quad \qquad a_t \sim RBN(0,\sigma_a^2) \nonumber
+\end{align}
+
+La estimación del modelo (\ref{eq:mod1_ar5}) se muestra en la Tabla~\ref{tab:mod1_ar5}. Todos los parámetros son significativos.
+
+\begin{table}
+\caption{Resumen modelo con errores estructurales AR(5) solo $\phi_1$ y $\phi_5$.}
+\label{tab:mod1_ar5}
+\centering
+\begin{tabular}{lrrr}
+Parámetro & Estimación & Error Estándar & $\Pr(|t_{47}| > |t_0|)$ \\
+  \hline
+  $\phi_1$ & 0.9493 & 0.0572 & $< 2\times10^{-16}$ \\
+    $\phi_5$ & -0.2393 & 0.0566 & $1.069\times10^{-4}$ \\
+$\beta_0$ & 7.4513 & 0.0326 & $< 2\times10^{-16}$ \\
+ $\beta_1$ & 0.0470 & 0.0027 &  $< 2\times10^{-16}$\\
+ $\beta_2$ & -0.0003 & 0.0002 & 0.0991 \\
+  $\delta_2$  & 0.0271 & 0.0054 & $8.366\times10^{-6}$ \\
+  $\delta_3$ & 0.0414 & 0.0067 & $1.540\times10^{-7}$ \\
+ $\delta_4$5 & 0.1349 & 0.0055 & $< 2\times10^{-16}$ \\
+   \hline
+   \multicolumn{3}{l}{$exp(C_n^*(p)):$ $AIC=$ 22620.2 $BIC=$ 30290.1} & \\
+    \hline
+\end{tabular}
 \end{table}
 
+Se puede ver que los parámetros que definene la tendencia y estacionalidad de los parámetros son significativos si se toman valores $\alpha$ pequeños.
 
-\textbf{e)} Puesto que los residuales no provienen de un ruido blanco, el modelo ajustado no es válido. Posiblemente la presencia de ciclos y cambios estructurales que no se  pueden modelar con la tendencia escogida son los causante de la falta de ajuste del modelo.
+La ecuación ajustada en escala original, con factor de corrección log-normal $exp(0.5 \sigma_a^2)=1.0002$ es:
 
-\textbf{f)} Si, aunque los resudiales muestran algunas rachas de valores por encima y por debajo del promedio, en general si oscilan al rededor de una media constante, cercana a cero, además a varianza también se puede considerar constante. La ACF además monstró un patrón de cola amortiguada de tipo sinusoidal, que converge rápidamente a cero cuando $k$ tiende a infinito. Es decir, el proceso es ergódico.
+\begin{align}
+\label{eq:mod1_ar5_aju}
+    \hat{Y}_t \approx & \, 1722.465 + 1.048 t + 0.999 t^2 + 1.028 I_{2t} + 1.042 I_{3t} + 1.145 I_{4t} + 1.0002 exp(\hat{E}_t)\\
+    \hat{E}_t = & \, 0.9493 \hat{E}_{t-1} - 0.2393 \hat{E}_{t-5} \nonumber
+\end{align}
+
+\textbf{Modelo 2: log-cuadrático con errores AR(2)MA(1)[4] estacional:}
+
+De los modelos seleccionados con estacionalidad, usando el método auto.arima  con el criterio BIC se obtuvo el modelo AR(2)MA(1)[4] estacionario ($d=D=0$) y de media cero para los errores estructurales. El modelo completo sería:
+
+\begin{align}
+\label{eq:mod2_ar2ma1s}
+    log(Y_t) = & \, \beta_0 + \beta_1 t + \beta_2 t^2 + \delta_2 I_{2t} + \delta_3 I_{3t} + \delta_4 I_{4t} + E_t \\
+    E_t = &\, \phi_1 E_{t-1} + \phi_2 E_{t-2} + a_t + \Theta_1 a_{t-4} \nonumber
+\end{align}
+
+La estimación del modelo (\ref{eq:mod2_ar2ma1s}) se muestra en la Tabla~\ref{tab:mod2_ar2ma1s}. Todos los parámetros son significativos.
+
+\begin{table}
+\caption{Resumen modelo con errores estructurales AR(2)MA(1)[4].}
+\label{tab:mod2_ar2ma1s}
+\centering
+\begin{tabular}{lrrr}
+Parámetro & Estimación & Error Estándar & $\Pr(|t_{46}| > |t_0|)$ \\
+  \hline
+  $\phi_1$ & 1.1556 & 0.1253 & $5.02\times10^{-12}$ \\
+    $\phi_2$ & -0.3857 & 0.1378 & $7.49\times10^{-3}$ \\
+    $\Theta_1$ & 0.6733 & 0.1447 & $2.79\times10^{-5}$ \\
+$\beta_0$ & 7.4740 & 0.0406 & $< 2\times10^{-16}$ \\
+ $\beta_1$ & 0.0451 & 0.0038 &  $9.460\times10^{-16}$\\
+ $\beta_2$ & -0.0003 & 0.00007 & $1.76\times10^{-4}$ \\
+  $\delta_2$  & 0.0282 & 0.0076 & $5.38\times10^{-4}$ \\
+  $\delta_3$ & 0.0416 & 0.0095 & $6.55\times10^{-5}$ \\
+ $\delta_4$5 & 0.1328 & 0.0076 & $< 2\times10^{-16}$ \\
+   \hline
+   \multicolumn{3}{l}{$exp(C_n^*(p)):$ $AIC=$ 19504.6 $BIC=$ 27088.9} & \\
+    \hline
+\end{tabular}
+\end{table}
+
+Se puede ver que los parámetros que definene la tendencia y estacionalidad de los parámetros son significativos para valores $\alpha$ pequeños.
+
+La ecuación ajustada en escala original, con factor de corrección log-normal $exp(0.5 \sigma_a^2)=1.0002$ es:
+
+\begin{align}
+\label{eq:mod2_ar2ma1s_aju}
+    \hat{Y}_t \approx & \, exp(7.4740 + 0.0451 t - 0.0003 t^2 + 0.0282 I_{2t} + 0.0416 I_{3t} + 0.1328 I_{4t} + \hat{E}_t) \times exp(0.5\sigma_a^2) \\
+    \hat{E}_t = &\, 1.1556 \hat{E}_{t-1} - 0.3857 \hat{E}_{t-2} + 0.6733 \hat{a}_{t-4} \nonumber
+\end{align}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.6]{series_vs_ajuste.pdf}
+\caption{Series en su escala original y las ajustadas para los tres modelos seleccionados.}
+\label{fig:residuales_ar2ma1s}
+\end{figure}
 
 
-%%% Punto 3 ------------------------------------------------------------------
-\section*{Punto 3}
+\textbf{Modelo 3: log-cuadrático con errores AR(5) completo:}
 
-\textbf{a)} En la Figura~\ref{fig:p2_residuales_mod2} se pueden var los residuales vs el tiempo y los valores ajustados del modelo 2 exponencial-cuadrático estacional.
+Con los demás métodos estudiados, el mejor modelo para la los errores es un AR(5), pero esta vez con todos los parámetros.
 
-Este mudelo posee los mismos problemas que el anterior; no independencia, ciclos y rachas de residuales por debajo y por encima de cero, y además tiene el agravante de que ahora la varianza no es constante, pues muestra un patrón claro de embudo.
+\begin{align}
+\label{eq:mod3_ar5f}
+    log(Y_t) = & \, \beta_0 + \beta_1 t + \beta_2 t^2 + \delta_2 I_{2t} + \delta_3 I_{3t} + \delta_4 I_{4t} + E_t \\
+    E_t = & \, \phi_1 E_{t-1} + \phi_2 E_{t-2} + \phi_3 E_{t-3} + \phi_4 E_{t-4} + \phi_5 E_{t-5} + a_t \quad \qquad a_t \sim RBN(0,\sigma_a^2) \nonumber
+\end{align}
 
-\begin{figure*}
-	\includegraphics[scale=1]{p2_residuales_mod2.pdf}
-	\caption{Gráficos de residuales modelo 2 exponencial-cuadrático estacional.}
-	\label{fig:p2_residuales_mod2}
-\end{figure*}
+La estimación del modelo (\ref{eq:mod3_ar5f}) se muestra en la Tabla~\ref{tab:mod3_ar5f}. Todos los parámetros son significativos.
 
-\textbf{b)} En la ACF se puede observar que por lo menos hasta $k=$ 12 se rechaza la hipótesis nula $H_0:$ $\rho_k = 0$ vs  $\rho_k \neq 0$. Por lo tanto los residuales del modelo 2 no parecen provenir de un ruido blanco. La ACF sigue un patrón de cola amortiguada de tipo sinusoidal, como el modelo anterior. La PACF tampoco tienen un patrón claro, pero lo más probable es que tengan un patron de corte a partir de $k=$ 4.
+\begin{table}
+\caption{Resumen modelo con errores estructurales AR(5) completo.}
+\label{tab:mod3_ar5f}
+\centering
+\begin{tabular}{lrrr}
+Parámetro & Estimación & Error Estándar & $\Pr(|t_{44}| > |t_0|)$ \\
+  \hline
+  $\phi_1$ & 0.9351 & 0.1240 & $9.25\times10^{-10}$ \\
+    $\phi_2$ & -0.0545 & 0.1709 & 0.7513 \\
+      $\phi_3$ & 0.0253 & 0.1821 & 0.4453 \\
+        $\phi_4$ & 0.1701 & 0.1102 & 0.1298 \\
+    $\phi_5$ & -0.3756 & 0.0894 & $1.27\times10^{-4}$ \\
+$\beta_0$ & 7.4545 & 0.0316 & $< 2\times10^{-16}$ \\
+ $\beta_1$ & 0.0467 & 0.0022 &  $< 2\times10^{-16}$\\
+ $\beta_2$ & -0.0003 & 0.00004 & $3.21\times10^{-8}$ \\
+  $\delta_2$  & 0.0270 & 0.0056 & $1.621\times10^{-5}$ \\
+  $\delta_3$ & 0.0407 & 0.0078 & $2.57\times10^{-6}$ \\
+ $\delta_4$5 & 0.1341 & 0.0065 & $< 2\times10^{-16}$ \\
+   \hline
+   \multicolumn{3}{l}{$exp(C_n^*(p)):$ $AIC=$ 21590.5 $BIC=$ 29985.9} & \\
+    \hline
+\end{tabular}
+\end{table}
 
-\begin{figure*}
-	\includegraphics[scale=0.9]{p2_correlogramas_mod2.pdf}
-	\caption{Correlogramas de los residuales modelo 2 exponencial-cuadrático estacional.}
-	\label{fig:p2_correlogramas_mod2}
-\end{figure*}
+Se puede ver que los parámetros que definen la tendencia y estacionalidad de los parámetros son significativos si se toman valores $\alpha$ pequeños. Pero algunos parámetros del modelo AR no son significativos, específicamente $\phi_2$, $\phi_3$ y $\phi_4$, lo cual nos deja en el modelo restringido que se había identificado anteriormente.
 
-\textbf{c)} Tanto para el test de Box-Pierce como el de Lung-Box la prueba de hipótesis es, que para cada $m$:
+La ecuación ajustada en escala original, con factor de corrección log-normal $exp(0.5 \sigma_a^2)=1.0002$ es:
+
+\begin{align}
+\label{eq:mod3_ar5f_aju}
+    \hat{Y}_t \approx & \, exp(7.4545 + 0.0467 t - 0.0003 t^2 + 0.0270 I_{2t} + 0.0407 I_{3t} + 0.1341 I_{4t} + \hat{E}_t) \times exp(0.5\sigma_a^2)\\
+    \hat{E}_t = & \, 0.9351 \hat{E}_{t-1} - 0.0545 \hat{E}_{t-2} + 0.0253 \hat{E}_{t-3} + 0.1701 \hat{E}_{t-4} - 0.3756 \hat{E}_{t-5} \nonumber
+\end{align}
+
+\section{Análisis de residuales y validación de supuestos}
+
+En la Figura~\ref{fig:residuales_def} se muestran los gráficos de diagnóstico de los residuales $\hat{a}_t$ de los tres modelos seleccionados.
+
+Los residuales de todos los tres modelos oscilan al rededor de una media constante en cero y ninguno muestra signos de varianza no constante. Sí se pueden apreciar algunos puntos atípicos en los tres modelos, sobre todo al final de la serie. Si bien la presencia de ciclos ya no es tan evidente como en el los modelos sin errores ARMA, quedan algunos pequeños rezagos que ninguno de los modelos propuestos es capaz de capturar, sin embargo no son muy significativos.
+
+\begin{table}[ht!]
+\caption{Prueba Ljung-Box de los errores de los tres modelos.}
+\label{tab:res_mod1_ar5}
+\centering
+\begin{tabular}{rrrrrrrr}
+& & \multicolumn{2}{c}{Modelo 1} & \multicolumn{2}{c}{Modelo 2} & \multicolumn{2}{c}{Modelo 3} \\
+\cline{3-8}
+m & gl & $Q_{LB}$ & \small{$\Pr(\chi_m^2 >Q_{LB})$} & $Q_{LB}$ & \small{$\Pr(\chi_m^2 >Q_{LB})$} & $Q_{LB}$ & \small{$\Pr(\chi_m^2 >Q_{LB})$} \\
+  \hline
+6 & 6 & 2.2527 & 0.8950 & 4.1810 & 0.6522 & 1.1436 & 0.9796 \\
+  12 & 12 & 8.0670 & 0.7799 & 11.1561 & 0.5156 & 9.1546 & 0.6897 \\
+  18 & 18 & 13.8026 & 0.7419 & 16.0133 & 0.5916 & 15.1943 & 0.6486 \\
+  24 & 24 & 17.4240 & 0.8300 & 21.7092 & 0.5966 & 20.1417 & 0.6887 \\
+   \hline
+\end{tabular}
+\end{table}
+
+Para el test de Lung-Box la prueba de hipótesis es, que para cada $m=$ 6, 12, 18 y 24:
 
 $H_0:$ $\rho_1=\rho_2=...=\rho_m=0$ vs.
 
-$H_a:$ $\rho_k \neq 0$ para algún $k=1,2,...,m$
+$H_a:$ $\rho_k \neq 0$ para algún $k=$ 6, 12, 18 y 24
 
-El estadístico de prueba del test Box-Pierce es $Q_{BP}=n \sum_{k=1}^m \hat{\rho}_k^2 \sim \text{ aproximadamente } \chi_m^2$ y el de Lung-Box es $Q_{LB}=n(n+2) \sum_{k=1}^m \hat{\rho}_k^2/(n-k) \sim \text{ aproximadamente } \chi_m^2$. En ambos casos se rechaza $H_0$ si el valor p es pequeño, calculado como $\Pr(\chi_m^2 >Q_{BP})$ y $\Pr(\chi_m^2 >Q_{LB})$.
+El estadístico de prueba es $Q_{LB}=n(n+2) \sum_{k=1}^m \hat{\rho}_k^2/(n-k) \sim \text{ aproximadamente } \chi_m^2$ y se rechaza $H_0$ si el valor p calculado como $\Pr(\chi_m^2 >Q_{LB})$ es pequeño en el contexto del problema.
 
-En las Tablas \ref{tab:p3_bp} y \ref{tab:p3_lb} se observan los resultados de los test de Box-Pierce y de Lung-Box respectivamente para valores de $m=$ 48.
+En la Tabla~\ref{tab:res_mod1_ar5} se observan los resultados del test de Lung-Box para valores de $m=$ 6, 12, 18 y 24. Para todos los valores de $m$ no hay evidencia suficiente para rechazar $H_0$, es decir, los errores $\hat{a}_t$ sí parecen provenir de un ruido blanco.
+
+El análisis anterior se ve confirmado por las ACF y PACF de los errores que se muestran en la Figura~\ref{fig:acf_pacf_residuales_def}. Para ningún modelo hay evidencia fuerte en contra de los patrones en las gráficas no provengan de un ruido blanco, pues no hay cortes significativos en ninguna de ellas.
+
+Cumpliendo con el supuesto de independencia para los tres modelos, es prudente verificar si los errores se distribuyen normal. En la Figura~\ref{fig:residuales_def} se meustran los qq-plot para cada modelo  y las pruebas de Shapiro-Wilk y Kolmogorov-Smirnov. Bajo la hipótesis nula $H_0:$ de que los errores se distribuyen normal, versus la hipótesis alternativa $H_a$ de que no se distribuyen normal, se ve que no hay evidencia suficiente para rechazar el supuesto de normalidad para los errores de ninguno de los modelos. Si bien se ven algunos puntos atípicos, de manera general se puede decir que los errores se ajustan a la línea recta de normalidad.
+
+Podemos decir que en los tres modelos propuestos se cumple con el supuesto de ruido blanco normal de los errores.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.65]{residuales_def.pdf}
+\caption{Gráficos de los residuales de los tres modelos.}
+\label{fig:residuales_def}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[scale=0.65]{acf_pacf_residuales_def.pdf}
+\caption{ACF y PACF de los residuales de los tres modelos.}
+\label{fig:acf_pacf_residuales_def}
+\end{figure}
+
+
+\section{Pronósticos para la validación cruzada}
+
+En la Tabla~\ref{tab:pronosticos_modelos} se muestran los pronósticos puntuales y los intervalos de predicción del 95 \% para cada unos de los modelos. Se puede ver que el modelo 3 es el que menor amplitud promedio tiene, 1172.78 miles de millones de pesos,es decir que los pronósticos de este modelo tienen un rango de variación menor en promedio, de más o menos 586.39 miles de millones de pesos. El porcentaje de cobertura es el mismo para los tres modeos, 75 \%.
+
+
 
 \begin{table}[ht]
+\caption{Pronósticos e intervalos de predicción de los tres modelos.}
+\label{tab:pronosticos_modelos}
 \centering
-\begin{tabular}{rrrr}
-  \hline
-m & $Q_{BP}$ & gl & Valor p \\ 
-  \hline
-6 & 786.05 & 6 & 0.0000 \\ 
-  12 & 1063.24 & 12 & 0.0000 \\ 
-  18 & 1119.19 & 18 & 0.0000 \\ 
-  24 & 1124.42 & 24 & 0.0000 \\ 
-  30 & 1188.29 & 30 & 0.0000 \\ 
-  36 & 1309.02 & 36 & 0.0000 \\ 
-  42 & 1402.47 & 42 & 0.0000 \\ 
-  48 & 1464.98 & 48 & 0.0000 \\ 
-   \hline
+\footnotesize{
+\begin{tabular}{lr|rrr|rrr|rrr|}
+\cline{3-11}
+& & \multicolumn{3}{c|}{Modelo 1} & \multicolumn{3}{c|}{Modelo 2} & \multicolumn{3}{c|}{Modelo 3} \\
+\hline
+Periodo & Real & Pronóstico & LIP & LSP & Pronóstico & LIP & LSP & Pronóstico & LIP & LSP \\
+\hline
+T4 2013 & 10983 & 11191.27 & 10758.56 & 11641.38 & 11050.58 & 10624.64 & 11493.61 & 11153.52 & 10727.94 & 11595.98 \\
+T1 2014 & 10633 & 9993.22 & 9464.39 & 10551.60 & 10121.35 & 9531.28 & 10747.95 & 10064.04 & 9542.02 & 10614.62 \\
+T2 2014 & 9978  & 10346.43 & 9695.75 & 11040.78 & 10669.54 & 9941.04 & 11451.43 & 10420.95 & 9793.63 & 11088.46 \\
+T3 2014 & 11003 & 10589.65 & 9842.25 & 11393.81 & 10904.17 & 10114.06 & 11756.00 & 10623.78 & 9920.86 & 11376.51 \\
+\hline
+& & \multicolumn{3}{c|}{$\bar{Amp}:$ 1216.65 y \% Cobert: 75 \%} & \multicolumn{3}{c|}{$\bar{Amp}:$ 1309.49 y \% Cobert: 75 \%} & \multicolumn{3}{c|}{$\bar{Amp}:$ 1172.78 y \% Cobert: 75 \%} \\
+\cline{3-11}
 \end{tabular}
-\caption{Resultados prueba Box-Pierce Modelo 2.} 
-\label{tab:p3_bp}
+}
 \end{table}
+
+En la Tabla~\ref{tab:medidas_precision} se ven la medidas de precisión. En este caso el modelo dos es el que mejores medidas tiene, en todas ellas sobrepasa a los otros dos modelos.
 
 \begin{table}[ht]
+\caption{Medidas de precisión de los pronósticos.}
+\label{tab:medidas_precision}
 \centering
-\begin{tabular}{rrrr}
-  \hline
-m & $Q_{LB}$ & gl & Valor p \\ 
-  \hline
-6 & 798.69 & 6 & 0.0000 \\ 
-  12 & 1085.52 & 12 & 0.0000 \\ 
-  18 & 1144.49 & 18 & 0.0000 \\ 
-  24 & 1150.11 & 24 & 0.0000 \\ 
-  30 & 1220.55 & 30 & 0.0000 \\ 
-  36 & 1356.12 & 36 & 0.0000 \\ 
-  42 & 1463.27 & 42 & 0.0000 \\ 
-  48 & 1536.42 & 48 & 0.0000 \\
-   \hline
+\begin{tabular}{lrrr}
+& Modelo 1 & Modelo 2 & Modelo 3 \\
+\hline
+ RMSE & 435.69 & 434.27 & 416.17 \\
+ MAE & 407.46 & 342.40 & 390.41 \\
+ MAPE & 3.84 & 3.31 & 3.70 \\
+\hline
 \end{tabular}
-\caption{Resultados prueba Ljung-Box modelo 2.} 
-\label{tab:p3_lb}
 \end{table}
 
-En ambas pruebas, y para todos los valores de $m$ hay evidencia suficiente para rechazar $H_0$, es decir, por lo menos un $\rho_k \neq 0$ para $k=$ 1,2,...,m. La serie de los residuales no proviene de un ruido blanco.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.8]{graf_pronost.pdf}
+\caption{Gráfico de los pronósticos vs los valores reales.}
+\label{fig:graf_pronost}
+\end{figure}
 
-\textbf{d)} En este caso, por ser un modelo no lineal, la prueba Durbin-Watson no es posible aplicarla con las herramientas que tenemos. Sin embargo con las pruebas anteriores es concluyente que los residuales no provienen de un ruido blanco.
+\pagebreak
+
+\section*{Conclusiones}
+
+Se pudo observar que el ajuste del modelo presentado en el primer trabajo mejoró considerablemente al incluirle una estructura ARMA en los errores del modelo global. Se pudo constatar que hubo una disminución de ciclos en los residuales estructurales, mejoró el supuesto de varianza constante y además ya se pudo cumplir con el supuesto de independencia y normalidad de los errores, los cual quiere decir que el modelo ARMA sí logró capturar buena parte de la información que el modelo global no era capaz por sí solo.
+
+Entre los tres posibles modelos seleccionados, el modelo 2, log-cuadrático estacional con errores AR(2)MA(1)[4] estacional fue el mejor modelo, ya que le gano a los demás en pronósticos y los supuestos sobre los errores se comportan muy similar entre todos.
+
+El anterior modelo dejó en evidencia que quizá haya una componente estacional no determinística que la variables indicadoras no fueron capaces de capturar.
 
 
-\textbf{e)} Para este modelo, los residuales tampoco provienen de un ruido blanco y por lo  tanto el modelo ajustado no es válido. Posiblemente la varianza no constante, la presencia de ciclos y cambios estructurales que no se  pueden modelar con la tendencia escogida son los causante de la falta de ajuste del modelo.
+% Insertar referencias del archivo referencias.bib
+\printbibliography
 
-\textbf{f)} No, pues en este modelo la varianza de los residuales ya no es constante, es decir $\sigma_t^2 \neq \sigma^2 $. Como este requisito no se cumple, el proceso no es estacionario en covarianza, aun siendo estacionario en media y ergódico.
+
+%\section*{Código de R}
+%% Insertar código utilizado en R
+%\inputminted
+%[
+%    frame=none,
+%    mathescape,
+%    fontsize=\small
+%]{r}{../r/trabajo2.R}
 
 
 \end{document}
